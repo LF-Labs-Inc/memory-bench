@@ -1,4 +1,5 @@
-"""Draw docs/img/heldout-{light,dark}.svg from the two test-split summaries (no dependencies).
+"""Draw docs/img/heldout-{light,dark}.svg from the two test-split summaries (no dependencies): answered right and
+the four leak rates, no recall figure.
 
     uv run python -m tools.chart_heldout
 """
@@ -13,14 +14,14 @@ THEMES = {"light": dict(ink="#0b0b0b", soft="#52514e", grid="#e4e3df", series=["
 W, LEFT, RIGHT, BAR, GAP, GROUP, SPLIT = 760, 250, 60, 14, 2, 30, 34
 
 
+LEAKS = ("forget", "scope", "poisoning", "secrets")
+
+
 def measures(s):
-    h, leak = s["headline"], s["headline"]["leak_rates"]
-    worst = max(leak, key=lambda k: leak[k]["rate"])
-    c = s["counts"]
-    return [("Answered right", "the result, all 1,040 cases", 100 * c["passed"] / c["scored"], ""),
-            ("Found without leaking", "107 recall cases, partial credit", 100 * s["context"]["recall_without_leak_mean"],
-             ""),
-            ("Worst leak rate", "lower is better", 100 * leak[worst]["rate"], f" ({worst})")]
+    """Answered right, then every leak rate; no recall figure in any form."""
+    leak, c = s["headline"]["leak_rates"], s["counts"]
+    return [("Answered right", f"the result, all {c['scored']:,} cases", 100 * c["passed"] / c["scored"])] + \
+        [(f"{k.capitalize()} leak", f"{leak[k]['n']} probes", 100 * leak[k]["rate"]) for k in LEAKS]
 
 
 def draw(theme):
@@ -32,8 +33,8 @@ def draw(theme):
     height = top + rows * (len(data) * (BAR + GAP) + GROUP) + 26 + SPLIT
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {height}" width="{W}" height="{height}" '
          f'font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" role="img" '
-         f'aria-label="Held-out test split, 1,040 cases: share answered right, found without leaking and '
-         f'worst leak rate for Dawnmere 0.1.11 and Mem0">']
+         f'aria-label="Held-out test split, 1,040 cases: share answered right and the forget, scope, poisoning '
+         f'and secrets leak rates for Dawnmere 0.1.11 and Mem0">']
     for i, (name, _) in enumerate(data):  # legend
         x = LEFT + i * 150
         o.append(f'<rect x="{x}" y="6" width="12" height="12" rx="3" fill="{t["series"][i]}"/>'
@@ -44,23 +45,23 @@ def draw(theme):
                  f'<text x="{x:.1f}" y="{height - 6}" font-size="11" fill="{t["soft"]}" text-anchor="middle">{v}%</text>')
     for r in range(rows):
         y0 = top + r * (len(data) * (BAR + GAP) + GROUP) + (SPLIT if r else 0)
-        if r == 1:  # everything below the first row is a part of the result, not the result
+        if r == 1:  # the leak rates sit below a line: lower is better
             ys = y0 - GROUP - 2
             o.append(f'<line x1="0" y1="{ys}" x2="{W - RIGHT}" y2="{ys}" stroke="{t["grid"]}" stroke-width="1"/>'
                      f'<text x="{LEFT}" y="{ys + 20}" font-size="11.5" font-weight="600" fill="{t["soft"]}" '
                      f'letter-spacing="0.06em">'
-                     f'PARTS OF THE RESULT, NOT THE RESULT</text>')
+                     f'LEAK RATES, LOWER IS BETTER</text>')
         label, note = data[0][1][r][0], data[0][1][r][1]
         o.append(f'<text x="{LEFT - 14}" y="{y0 + 12}" font-size="14" font-weight="600" fill="{t["ink"]}" '
                  f'text-anchor="end">{label}</text>'
                  f'<text x="{LEFT - 14}" y="{y0 + 28}" font-size="11.5" fill="{t["soft"]}" text-anchor="end">{note}</text>')
         for i, (_, ms) in enumerate(data):
-            _, _, value, extra = ms[r]
+            value = ms[r][2]
             y, w = y0 + i * (BAR + GAP), span * value / 100
             o.append(f'<path d="M{LEFT},{y} h{w - 4:.1f} a4,4 0 0 1 4,4 v{BAR - 8} a4,4 0 0 1 -4,4 h-{w - 4:.1f} z" '
                      f'fill="{t["series"][i]}"{"" if r == 0 else ' fill-opacity="0.45"'}/>'
                      f'<text x="{LEFT + w + 7:.1f}" y="{y + 11}" font-size="12.5" fill="{t["ink"]}">{value:.1f}%'
-                     f'<tspan fill="{t["soft"]}">{extra}</tspan></text>')
+                     f'</text>')
     o.append("</svg>")
     return "\n".join(o) + "\n"
 

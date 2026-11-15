@@ -76,8 +76,7 @@ def test_recall_without_leak_zeroes_a_case_that_leaked_and_keeps_recall_mean():
     assert c["recall_n"] == 3
     assert c["recall_mean"] == 2.5 / 3
     assert c["recall_without_leak_mean"] == 1.5 / 3
-    assert "Found without leaking (needed facts the injected context carried, a case with a forbidden hit counted as " \
-           "not found): 50.0%" in report.render_markdown(s)
+    assert "without leaking" not in report.render_markdown(s).lower()  # summary.json keeps it; the report does not
 
 
 def test_wilson_interval_matches_known_values():
@@ -117,20 +116,22 @@ def test_answered_right_is_the_share_of_cases_passed_and_leads_the_report():
     assert "answered right 66.7%" in report.headline_text(s)
 
 
-RAW_RECALL_LABELS = ("Gold-fact recall", "Needed facts found", "context recall", "token-matched recall",
-                     "Recall found without leaking", "recall_mean")
+RECALL_LABELS = ("Gold-fact recall", "Needed facts found", "context recall", "token-matched recall",
+                 "Recall found without leaking", "recall_mean", "Found without leaking", "without leaking",
+                 "leak-adjusted", "mean score")
 
 
-def test_a_report_prints_no_raw_recall_label():
+def test_a_report_prints_no_recall_label_or_figure():
     recs = [recall_rec("a", 1.0, ["u1"]), recall_rec("b", 1.0, ["u2"], leak=True),
             recall_rec("c", 0.5, ["u1", "o1"], missing=["o1"]), rec("d")]
     s = report.summarize(recs, ORIGIN, {"adapter": "x"})
     for md in (report.render_markdown(s), report.render_markdown(s, recs, ORIGIN), report.headline_text(s)):
-        assert not [label for label in RAW_RECALL_LABELS if label.lower() in md.lower()]
-        assert "83.3%" not in md  # the plain recall mean, 2.5/3
+        assert not [label for label in RECALL_LABELS if label.lower() in md.lower()]
+        assert "83.3%" not in md and "0.8" not in md  # the plain recall mean, 2.5/3, as a percentage or a mean score
+        assert "50.0%" not in md  # found without leaking, 1.5/3
 
 
-def test_rebuild_from_a_summary_saved_before_answered_right_and_leak_adjusted_recall(tmp_path):
+def test_rebuild_from_a_summary_saved_before_answered_right_or_leak_adjusted_recall(tmp_path):
     recs = [recall_rec("a", 1.0, ["u1"]), recall_rec("b", 1.0, ["u2"], leak=True), rec("c")]
     recs[2]["recall"] = None
     s = report.summarize(recs, ORIGIN, {"adapter": "x"})
@@ -146,6 +147,7 @@ def test_rebuild_from_a_summary_saved_before_answered_right_and_leak_adjusted_re
     report.rebuild(test, ORIGIN)
     md = (dev / "report.md").read_text()
     assert "Answered right" in md and "**100.0%**" in md and "(n=3)" in md
-    assert "Found without leaking" in md and ": 50.0%" in md and "(n=2 cases)" in md
-    assert "leak-adjusted recall was not recorded for this run" in (test / "report.md").read_text()
+    for text in (md, (test / "report.md").read_text()):
+        assert "without leaking" not in text.lower()
+        assert "recall" not in text.lower().replace("| context_recall |", "")  # the scoring type's pass rate stays
     assert json.loads((dev / "summary.json").read_text()) == s  # the saved summary is not rewritten

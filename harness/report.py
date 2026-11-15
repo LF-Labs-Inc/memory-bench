@@ -24,17 +24,17 @@ summed over replay groups, like the cost); a run without replay stats is taken t
 2026-08-31, 184 days, and says so. Null when the system reports no cost.
 
 Recall, over the cases that have needed facts (context_recall cases): summary.json keeps the plain mean, the number
-of those cases, the share found without leaking (a case's recall, or 0 when the case had a forbidden hit, so a context
-that carried the needed fact together with forbidden content does not count as found), a Wilson 95% interval for
-each, taking a case as one trial (approximate when a case's recall is a fraction), and the share of needed facts found
-by who stated them, the principal or the assistant versus anyone else (the truth row's stated_by). report.md leads
-with answered right and prints recall only as found without leaking, never the plain mean or the split by speaker.
+of those cases, the share found without leaking (a case's recall, or 0 when the case had a forbidden hit), a Wilson
+95% interval for each, taking a case as one trial (approximate when a case's recall is a fraction), and the share of
+needed facts found by who stated them, the principal or the assistant versus anyone else (the truth row's stated_by).
+These are machine records for other tools. report.md prints no recall figure in any form: it leads with answered
+right, then the leak rates and the pass rates by area, level, channel, difficulty and scoring type, with no mean-score
+column (a context_recall row's mean score is its recall mean).
 
     uv run python -m harness.report RUN_DIR [RUN_DIR ...]
 
 rewrites each run's report.md from its saved summary.json and, for a dev run, its cases.jsonl; nothing is rescored
-and no model is called. A summary saved before answered right was added gets it from its counts; one saved before the
-leak-adjusted fields gets them from its cases.jsonl, and a run with neither says so in its report. summary.json is not
+and no model is called. A summary saved before answered right was added gets it from its counts. summary.json is not
 rewritten.
 """
 import argparse
@@ -255,17 +255,9 @@ def _ci(ci):
     return f", 95% interval {_f(ci[0], True)} to {_f(ci[1], True)}" if ci else ""
 
 
-def _found_line(c):
-    if c.get("recall_without_leak_mean") is None and not c.get("recall_n"):
-        return "- Found without leaking: leak-adjusted recall was not recorded for this run"
-    return (f"- Found without leaking (needed facts the injected context carried, a case with a forbidden hit counted "
-            f"as not found): {_f(c['recall_without_leak_mean'], True)}{_ci(c.get('recall_without_leak_ci95'))} "
-            f"(n={c['recall_n']} cases)")
-
-
 def _md_table(title, table):
-    lines = [f"### {title}", "", "| | n | pass rate | mean score |", "|---|---:|---:|---:|"]
-    lines += [f"| {k} | {v['n']} | {_f(v['pass_rate'], True)} | {_f(v['mean_score'])} |" for k, v in table.items()]
+    lines = [f"### {title}", "", "| | n | pass rate |", "|---|---:|---:|"]
+    lines += [f"| {k} | {v['n']} | {_f(v['pass_rate'], True)} |" for k, v in table.items()]
     return lines + [""]
 
 
@@ -316,7 +308,7 @@ def render_markdown(s, records=None, facts=None):
     out += _md_table("By area", s["by_area"]) + _md_table("By level", s["by_level"])
     out += _md_table("By channel", s["by_channel"]) + _md_table("By difficulty", s["by_difficulty"])
     out += _md_table("By scoring type", s["by_scoring"])
-    out += ["## Context", "", _found_line(c),
+    out += ["## Context", "",
             f"- Fact precision of injected context (approximate, token-detected facts): "
             f"{_f(c['fact_precision_mean'], True)}",
             f"- Junk rate on silence probes (any reported item or truth fact counts): "
@@ -379,14 +371,12 @@ def render_markdown(s, records=None, facts=None):
     return "\n".join(out)
 
 
-def from_saved(summary, records=None):
+def from_saved(summary):
     """A copy of a saved summary.json with what the current report needs and an older run did not save: answered
-    right from its counts, and the leak-adjusted recall from its records (a dev run's cases.jsonl) when there are any."""
+    right from its counts."""
     s = copy.deepcopy(summary)
     n = s["counts"]
     s["headline"].setdefault("answered_right", answered_right(n["passed"], n["scored"]))
-    if "recall_without_leak_mean" not in s["context"] and records is not None:
-        s["context"].update(found_without_leaking(records))
     return s
 
 
@@ -396,7 +386,7 @@ def rebuild(run_dir, facts):
     summary = json.loads((d / "summary.json").read_text())
     cases = d / "cases.jsonl"
     records = [json.loads(line) for line in cases.read_text().splitlines() if line.strip()] if cases.exists() else None
-    (d / "report.md").write_text(render_markdown(from_saved(summary, records), records,
+    (d / "report.md").write_text(render_markdown(from_saved(summary), records,
                                                  facts if records is not None else None))
 
 

@@ -30,63 +30,62 @@ Run `20261015T211528Z-dev-s0`, split `dev`, seed 0, answerer `claude-sonnet-5-5`
 
 ### By area
 
-| | n | pass rate | mean score |
-|---|---:|---:|---:|
-| abstention | 60 | 85.0% | 0.8 |
-| application | 50 | 30.0% | 0.4 |
-| attribution | 76 | 48.7% | 0.5 |
-| capture | 110 | 62.7% | 0.7 |
-| consolidation | 50 | 40.0% | 0.5 |
-| forget | 80 | 25.0% | 0.3 |
-| multi_hop | 56 | 42.9% | 0.5 |
-| poisoning | 80 | 41.2% | 0.4 |
-| retrieval | 65 | 49.2% | 0.6 |
-| robustness | 55 | 43.6% | 0.5 |
-| scope | 56 | 30.4% | 0.3 |
-| silence | 38 | 15.8% | 0.2 |
-| temporal | 71 | 63.4% | 0.7 |
-| update | 70 | 54.3% | 0.6 |
+| | n | pass rate |
+|---|---:|---:|
+| abstention | 60 | 85.0% |
+| application | 50 | 30.0% |
+| attribution | 76 | 48.7% |
+| capture | 110 | 62.7% |
+| consolidation | 50 | 40.0% |
+| forget | 80 | 25.0% |
+| multi_hop | 56 | 42.9% |
+| poisoning | 80 | 41.2% |
+| retrieval | 65 | 49.2% |
+| robustness | 55 | 43.6% |
+| scope | 56 | 30.4% |
+| silence | 38 | 15.8% |
+| temporal | 71 | 63.4% |
+| update | 70 | 54.3% |
 
 ### By level
 
-| | n | pass rate | mean score |
-|---|---:|---:|---:|
-| L2 | 434 | 50.0% | 0.6 |
-| L3 | 483 | 44.3% | 0.5 |
+| | n | pass rate |
+|---|---:|---:|
+| L2 | 434 | 50.0% |
+| L3 | 483 | 44.3% |
 
 ### By channel
 
-| | n | pass rate | mean score |
-|---|---:|---:|---:|
-| remote | 149 | 49.7% | 0.5 |
-| typed | 543 | 43.1% | 0.5 |
-| voice | 225 | 54.7% | 0.6 |
+| | n | pass rate |
+|---|---:|---:|
+| remote | 149 | 49.7% |
+| typed | 543 | 43.1% |
+| voice | 225 | 54.7% |
 
 ### By difficulty
 
-| | n | pass rate | mean score |
-|---|---:|---:|---:|
-| 1 | 3 | 33.3% | 0.3 |
-| 2 | 63 | 61.9% | 0.6 |
-| 3 | 440 | 55.5% | 0.6 |
-| 4 | 370 | 36.8% | 0.4 |
-| 5 | 41 | 26.8% | 0.3 |
+| | n | pass rate |
+|---|---:|---:|
+| 1 | 3 | 33.3% |
+| 2 | 63 | 61.9% |
+| 3 | 440 | 55.5% |
+| 4 | 370 | 36.8% |
+| 5 | 41 | 26.8% |
 
 ### By scoring type
 
-| | n | pass rate | mean score |
-|---|---:|---:|---:|
-| abstain | 51 | 88.2% | 0.9 |
-| context_recall | 76 | 61.8% | 0.7 |
-| context_silence | 34 | 0.0% | 0.0 |
-| exact | 4 | 75.0% | 0.8 |
-| judge | 604 | 46.0% | 0.5 |
-| leak | 139 | 38.8% | 0.4 |
-| set | 9 | 44.4% | 0.7 |
+| | n | pass rate |
+|---|---:|---:|
+| abstain | 51 | 88.2% |
+| context_recall | 76 | 61.8% |
+| context_silence | 34 | 0.0% |
+| exact | 4 | 75.0% |
+| judge | 604 | 46.0% |
+| leak | 139 | 38.8% |
+| set | 9 | 44.4% |
 
 ## Context
 
-- Found without leaking (needed facts the injected context carried, a case with a forbidden hit counted as not found): 65.6%, 95% interval 54.4% to 75.3% (n=76 cases)
 - Fact precision of injected context (approximate, token-detected facts): 5.9%
 - Junk rate on silence probes (any reported item or truth fact counts): 100.0% (n=59)
 - Over-injection (pass or fail on the needed fact only): pass rate 75.0%, fact precision 1.3%, truth facts injected mean 14.8, max 19 (n=4)

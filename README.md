@@ -7,17 +7,15 @@ planted in an email into your own rule.
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/img/heldout-dark.svg">
   <img src="docs/img/heldout-light.svg" width="760"
-       alt="Held-out test split, 1,040 cases. The result, answered right: Dawnmere 0.1.11 56.9%, Mem0 53.0%. Parts of the result: found without leaking, over 107 recall cases: Dawnmere 54.7%, Mem0 76.2%. Worst leak rate: Dawnmere 32.9% (scope), Mem0 78.4% (forget).">
+       alt="Held-out test split, 1,040 cases. The result, answered right: Dawnmere 0.1.11 56.9%, Mem0 53.0%. Leak rates, lower is better, Dawnmere then Mem0: forget 29.5% and 78.4% (88 probes), scope 32.9% and 75.3% (73), poisoning 10.3% and 57.4% (68), secrets 10.3% and 41.4% (29).">
 </picture>
 
 Held-out test split: all 1,040 cases of the private test half, one run each. **Answered right is the result.** A case
 is answered right only when the memory gave everything the question needed and nothing it should not have: nothing
-forgotten, out of scope or planted, and no memory at all when none was due. The two bars under the line are parts of
-that result, not results of their own; they are shown so the trade-off is visible. Found without leaking covers only
-the 107 recall cases (about one case in ten), counts a context that leaked as not found, and gives partial credit to a
-context that still failed its question. The forget, scope and poisoning leak rates are over 68 to 88 probes each,
-secrets over 29. Dawnmere answered 592 of the 1,040 cases right and Mem0 551, and Dawnmere leaked less in every
-category. Dawnmere is made by this benchmark's maintainers; the [results](#results) say what favours it (how each
+forgotten, out of scope or planted, and no memory at all when none was due. The leak rates under the line are shown
+beside it so the trade-off is visible: forget, scope and poisoning over 68 to 88 probes each, secrets over 29.
+Dawnmere answered 592 of the 1,040 cases right and Mem0 551, and Dawnmere leaked less in every category. The pass rate of every area is in the
+[results](#results). Dawnmere is made by this benchmark's maintainers; the results say what favours it (how each
 system is fed third-party text and forget requests is part of the gap), and the tables there have the other systems
 and every caveat.
 
@@ -49,7 +47,7 @@ answers from what the system injected, `claude-opus-5-5` judges), so memory desi
 | A held-out test split | Half of every area is test, frozen by id in `cases/split.json`; the test half stays private and the maintainers score submissions on it (`--split test` reports aggregates only) |
 | Judge agreement, reported | 5% of judged cases are judged again with a fresh call, and the agreement rate is in every result |
 | Competitors on the same brain | Mem0, Zep's Graphiti and Dawnmere's released engine run as published, with their model calls routed to the benchmark's model (`harness/adapters/COMPETITORS.md`) |
-| Found without leaking at matched disclosure | `harness.curve` cuts each saved context to smaller budgets, so a system that sends everything cannot look good by sending more |
+| Leaks at matched disclosure | `harness.curve` cuts each saved context to smaller token budgets and scores its leaks and silence junk again, so systems are compared at an equal size of what they send |
 
 The gaps come from the survey in [`docs/research.md`](docs/research.md) (section 3); the 15 areas and what each
 measures are in [`docs/spec.md`](docs/spec.md) (section 5) and `docs/taxonomy.md`.
@@ -86,7 +84,8 @@ its per-case records, `cases.jsonl` (32 MB for `full_history`, whose contexts ar
 `results/reference/naive_rag/20261015T211528Z-dev-s0`, `results/reference/mem0/20261015T183924Z-dev-s0-rescored-public`
 (rescored with the public scorer, unchanged), `results/reference/oracle/20261014-final3-dev-s0-rescored-public`. The
 Zep Graphiti run stopped before writing a summary. The disclosure curve over these runs (each saved context cut to
-smaller token budgets and scored again by tokens, no judge) is `results/reference/curve-dev.md`.
+smaller token budgets and its leaks and silence junk scored again by tokens, no judge) is
+`results/reference/curve-dev.md`.
 
 **In-sample rows.** Jarvis and Dawnmere's engine were developed against this benchmark's dev split: retrieval rules
 and thresholds were tuned on it, and the engine's own source comments name dev cases. Every number in the tables above
@@ -104,19 +103,38 @@ something the run can show).
 | Dawnmere 0.1.11 (released engine 0.1.9) | 1,040 | 2026-11-12 | 56.9 | 57.2 | 67.1 | 32.9 (scope) | 40.2 | 16.2 | 995 |
 | Mem0 | 1,040 | 2026-11-12 | 53.0 | 52.8 | 21.6 | 78.4 (forget) | 100.0 | 3.8 | 1,131 |
 
-| system | found without leaking (107 recall cases) | forget leak (n=88) | scope leak (n=73) | poisoning leak (n=68) | secrets leak (n=29) |
-|---|---:|---:|---:|---:|---:|
-| Dawnmere 0.1.11 (released engine 0.1.9) | 54.7 (45 to 64) | 29.5 | 32.9 | 10.3 | 10.3 (3 of 29) |
-| Mem0 | 76.2 (67 to 83) | 78.4 | 75.3 | 57.4 | 41.4 (12 of 29) |
+| system | forget leak (n=88) | scope leak (n=73) | poisoning leak (n=68) | secrets leak (n=29) |
+|---|---:|---:|---:|---:|
+| Dawnmere 0.1.11 (released engine 0.1.9) | 29.5 | 32.9 | 10.3 | 10.3 (3 of 29) |
+| Mem0 | 78.4 | 75.3 | 57.4 | 41.4 (12 of 29) |
+
+Pass rate by area, the same two runs:
+
+| area | n | Dawnmere 0.1.11 | Mem0 |
+|---|---:|---:|---:|
+| abstention | 60 | 85.0 | 88.3 |
+| application | 50 | 40.0 | 40.0 |
+| attribution | 80 | 35.0 | 67.5 |
+| capture | 110 | 65.5 | 67.3 |
+| consolidation | 50 | 38.0 | 56.0 |
+| forget | 80 | 56.2 | 20.0 |
+| multi_hop | 60 | 36.7 | 53.3 |
+| poisoning | 80 | 51.2 | 36.2 |
+| retrieval | 95 | 45.3 | 64.2 |
+| robustness | 55 | 58.2 | 63.6 |
+| scale | 30 | 73.3 | 56.7 |
+| scope | 75 | 56.0 | 22.7 |
+| silence | 65 | 83.1 | 20.0 |
+| temporal | 75 | 64.0 | 64.0 |
+| update | 75 | 70.7 | 72.0 |
 
 Dawnmere answered 592 of the 1,040 cases right and Mem0 551. Dawnmere withholds more of what it should: forget 29.5%
 against 78.4%, scope 32.9% against 75.3%, poisoning 10.3% against 57.4% and secrets 3 of 29 against 12 of 29, and it
 added nothing on 61 of 102 probes that should get no memory, where Mem0 added something to every one. It passed more
 seeded-fact (L1) cases, 62.7% against 41.8% (n=110); on L2 and L3 the two were within four points. It passed fewer
-retrieval (45.3 against 64.2), attribution (35.0 against 67.5) and multi-hop (36.7 against 53.3) cases, and it blocked
-17 of 105 remote questions that deserved an answer where Mem0 blocked 4. Counting a recall case as found only when its
-context carried nothing forbidden, with partial credit, Dawnmere found 54.7% and Mem0 76.2% (95% intervals in the
-table). Other people's words reach the two systems differently (see the 273-case cut below). Both systems score lower
+retrieval (45.3 against 64.2), attribution (35.0 against 67.5), consolidation (38.0 against 56.0) and multi-hop (36.7
+against 53.3) cases, and it blocked 17 of 105 remote questions that deserved an answer where Mem0 blocked 4. Other
+people's words reach the two systems differently (see the 273-case cut below). Both systems score lower
 here than on that cut, Dawnmere included: overall 57.2 against 60.9 and safety 67.1 against 68.4, and Mem0 52.8
 against 58.1 and 21.6 against 30.0. Against the cut, Dawnmere's forget leak rose from 22.7%, its remote over-block
 from 13.8%, and it leaked secrets here (none of 9 on the cut); its poisoning and silence junk were lower.
@@ -125,9 +143,9 @@ Records: `results/reference/dawnmere/20261112T014719Z-test-s0/` and `results/ref
 aggregates only, case ids left out. One run each, seed 0. The Dawnmere run used the adapter with two bridge fixes made
 for it: facts the user stated are seeded with the engine's current origin name (owner_typed; no earlier row seeded
 facts), and sessions and probes reach the engine as Claude Code's, which engines from 0.1.6 on check by the
-transcript's path (the 0.1.7 row below, on engine 0.1.5, predates that check). Mem0's found-without-leaking figure and
-the other `context` fields the [fairness audit](docs/fairness-audit-2026-11-12.md) added came from a rescore of the
-same run from its answer cache, with no model calls; every other figure came out the same.
+transcript's path (the 0.1.7 row below, on engine 0.1.5, predates that check). The `context` fields of Mem0's
+`summary.json` that the [fairness audit](docs/fairness-audit-2026-11-12.md) added came from a rescore of the same run
+from its answer cache, with no model calls; every other figure came out the same.
 
 **An earlier held-out cut, 273 cases.** An older run, kept beside the dev rows: the cut of the test half that the
 244-case dev tables use (levels 2 and 3, every area but scale, no distractor variants, sessions up to the same date),
@@ -138,10 +156,10 @@ with Dawnmere 0.1.7. The whole-half table above replaces it as the held-out resu
 | Dawnmere 0.1.7 (released engine 0.1.5, public adapter) | 273 | 2026-11-10 | 59.0 | 60.9 | 68.4 | 31.6 (scope) | 50.0 | 13.8 | 1,070 |
 | Mem0 | 273 | 2026-11-10 | 59.7 | 58.1 | 30.0 | 70.0 (poisoning) | 100.0 | 0.0 | 1,196 |
 
-| system | found without leaking (23 recall cases) | forget leak (n=22) | scope leak (n=19) | poisoning leak (n=20) | secrets leak (n=9) |
-|---|---:|---:|---:|---:|---:|
-| Dawnmere 0.1.7 (released engine 0.1.5, public adapter) | 65.2 (45 to 81) | 22.7 | 31.6 | 15.0 | 0.0 (0 of 9) |
-| Mem0 | 73.9 (54 to 87) | 68.2 | 68.4 | 70.0 | 11.1 (1 of 9) |
+| system | forget leak (n=22) | scope leak (n=19) | poisoning leak (n=20) | secrets leak (n=9) |
+|---|---:|---:|---:|---:|
+| Dawnmere 0.1.7 (released engine 0.1.5, public adapter) | 22.7 | 31.6 | 15.0 | 0.0 (0 of 9) |
+| Mem0 | 68.2 | 68.4 | 70.0 | 11.1 (1 of 9) |
 
 Dawnmere scored 61.7 overall and 63.2 on safety on the dev cut and 60.9 and 68.4 here, so the dev row did not
 overstate it; its silence junk was worse here (10 of 20 probes, against 7 of 24). Mem0 moved from 59.7 and 21.1 to
@@ -149,17 +167,14 @@ overstate it; its silence junk was worse here (10 of 20 probes, against 7 of 24)
 pass rates). They differ in what they get right. Dawnmere withholds more of what it should: leak rates were forget
 22.7% against 68.2%, scope 31.6% against 68.4%, poisoning 15.0% against 70.0% and secrets 0 of 9 against 1 of 9. It
 passed fewer retrieval (43.5 against 60.9), attribution (32.4 against 73.5) and multi-hop (53.8 against 92.3) cases,
-and it blocked 4 of 29 remote questions that deserved an answer where Mem0 blocked none. Counting a recall case as
-found only when its context carried nothing forbidden, Dawnmere found 65.2% and Mem0 73.9% (n=23 recall cases). On the
-dev cut, that gap is in the facts other people stated, and other people's words reach the two systems differently:
-Mem0 gets them as user messages, Dawnmere only as content the assistant read ([fairness
+and it blocked 4 of 29 remote questions that deserved an answer where Mem0 blocked none. Other people's words reach
+the two systems differently: Mem0 gets them as user messages, Dawnmere only as content the assistant read ([fairness
 audit](docs/fairness-audit-2026-11-12.md)). With about 20 probes per category, each leak rate moves about five points
 per case. Jarvis and claude-mem have no test-split row.
 
 Records: `results/reference/dawnmere/20261110T161902Z-test-s0/` and `results/reference/mem0/20261110T184704Z-test-s0/`
 (`summary.json`, `report.md`, `config.json`: aggregates only, as `--split test` writes them; the case ids are left
-out of the published copies). Found without leaking is `by_scoring.context_recall.mean_score` in these two runs,
-which predate the leak-adjusted field in `context`. One run each, seed 0.
+out of the published copies). One run each, seed 0.
 
 **The maintainers' own system.** Jarvis is a memory system built by this benchmark's maintainers; Dawnmere's memory
 engine (`lflabs-memory-engine`) was split out of Jarvis's memory code, but the Jarvis rows were measured on Jarvis's own
@@ -324,7 +339,7 @@ The full contract (optional `answer`, `cost`, `close`, `reopen`; what a session 
 - The remote over-block rate (remote cases that needed an answer and got nothing) is reported beside it, so
   refusing everything cannot win.
 - `uv run python -m harness.curve RUN_DIR [RUN_DIR ...]` replays saved contexts cut to 250 to 8,000 tokens, with no
-  model calls, and gives found without leaking, leak rate and silence junk at each budget.
+  model calls, and gives the leak rate and silence junk at each budget.
 
 The reference policy is [`docs/policy.md`](docs/policy.md); the scoring functions are in
 [`harness/score.py`](harness/score.py).

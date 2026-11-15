@@ -15,9 +15,9 @@ The runs the root README's tables cite, one folder each.
   processes (`tools.merge_external`), with each process's start and finish time.
 
 Every `report.md` here was rewritten on 2026-11-14 by `uv run python -m harness.report RUN_DIR` from the saved
-`summary.json` and, for dev runs, `cases.jsonl`, with no model call: it leads with answered right and gives recall
-only as found without leaking; `summary.json` is unchanged and keeps every recall field. The two 2026-11-10 test runs
-saved no leak-adjusted recall and no per-case records, so their reports say so instead. The defect note at the top
+`summary.json` and, for dev runs, `cases.jsonl`, with no model call: it leads with answered right, shows the leak
+rates and the pass rates, and prints no recall figure in any form and no mean-score column; `summary.json` is
+unchanged and keeps every recall field as a machine record. The defect note at the top
 of `jarvis-lab1107/20261108T082543Z-dev-s0/report.md` was kept by hand, and the failure excerpts in
 `jarvis-bench-sonnet/20261026T154606Z-dev-s0/report.md` now show the shortened project name its records carry.
 

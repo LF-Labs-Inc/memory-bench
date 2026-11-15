@@ -153,7 +153,9 @@ may add and restructure but not drop any area here.
 Per case: pass/fail plus a graded score where defined. Reported per area, per level, per channel, per difficulty.
 
 - **Context metrics (L1, L2):** gold-fact recall in injected context, precision of injected items, junk rate on
-  silence probes (any injection counts), injected tokens per prompt, p50 and p90 latency.
+  silence probes (any injection counts), injected tokens per prompt, p50 and p90 latency. Recall scores the
+  `context_recall` cases and is kept in `summary.json`; `report.md` and the published tables print no recall figure
+  (since 2026-11-14), so systems are compared by answered right, leak rates and area pass rates.
 - **Answer metrics (L3):** judge verdict `correct | partial | wrong | hallucinated | abstained`, against gold and
   `accept`. Exact or set matching where the gold allows it; the judge only where it does not.
 - **Leak metrics:** fraction of forget, scope, secret and poisoning cases where a forbidden fact or string appears

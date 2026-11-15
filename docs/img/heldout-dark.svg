@@ -1,19 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 280" width="760" height="280" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Held-out test split, 1,040 cases: share answered right, found without leaking and worst leak rate for Dawnmere 0.1.11 and Mem0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 404" width="760" height="404" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Held-out test split, 1,040 cases: share answered right and the forget, scope, poisoning and secrets leak rates for Dawnmere 0.1.11 and Mem0">
 <rect x="250" y="6" width="12" height="12" rx="3" fill="#3987e5"/><text x="268" y="16" font-size="13" fill="#f0efec">Dawnmere 0.1.11</text>
 <rect x="400" y="6" width="12" height="12" rx="3" fill="#d95926"/><text x="418" y="16" font-size="13" fill="#f0efec">Mem0</text>
-<line x1="250.0" y1="28" x2="250.0" y2="258" stroke="#3a3a38" stroke-width="1"/><text x="250.0" y="274" font-size="11" fill="#c3c2b7" text-anchor="middle">0%</text>
-<line x1="362.5" y1="28" x2="362.5" y2="258" stroke="#3a3a38" stroke-width="1"/><text x="362.5" y="274" font-size="11" fill="#c3c2b7" text-anchor="middle">25%</text>
-<line x1="475.0" y1="28" x2="475.0" y2="258" stroke="#3a3a38" stroke-width="1"/><text x="475.0" y="274" font-size="11" fill="#c3c2b7" text-anchor="middle">50%</text>
-<line x1="587.5" y1="28" x2="587.5" y2="258" stroke="#3a3a38" stroke-width="1"/><text x="587.5" y="274" font-size="11" fill="#c3c2b7" text-anchor="middle">75%</text>
-<line x1="700.0" y1="28" x2="700.0" y2="258" stroke="#3a3a38" stroke-width="1"/><text x="700.0" y="274" font-size="11" fill="#c3c2b7" text-anchor="middle">100%</text>
+<line x1="250.0" y1="28" x2="250.0" y2="382" stroke="#3a3a38" stroke-width="1"/><text x="250.0" y="398" font-size="11" fill="#c3c2b7" text-anchor="middle">0%</text>
+<line x1="362.5" y1="28" x2="362.5" y2="382" stroke="#3a3a38" stroke-width="1"/><text x="362.5" y="398" font-size="11" fill="#c3c2b7" text-anchor="middle">25%</text>
+<line x1="475.0" y1="28" x2="475.0" y2="382" stroke="#3a3a38" stroke-width="1"/><text x="475.0" y="398" font-size="11" fill="#c3c2b7" text-anchor="middle">50%</text>
+<line x1="587.5" y1="28" x2="587.5" y2="382" stroke="#3a3a38" stroke-width="1"/><text x="587.5" y="398" font-size="11" fill="#c3c2b7" text-anchor="middle">75%</text>
+<line x1="700.0" y1="28" x2="700.0" y2="382" stroke="#3a3a38" stroke-width="1"/><text x="700.0" y="398" font-size="11" fill="#c3c2b7" text-anchor="middle">100%</text>
 <text x="236" y="46" font-size="14" font-weight="600" fill="#f0efec" text-anchor="end">Answered right</text><text x="236" y="62" font-size="11.5" fill="#c3c2b7" text-anchor="end">the result, all 1,040 cases</text>
-<path d="M250,34 h252.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-252.2 z" fill="#3987e5"/><text x="513.2" y="45" font-size="12.5" fill="#f0efec">56.9%<tspan fill="#c3c2b7"></tspan></text>
-<path d="M250,50 h234.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-234.4 z" fill="#d95926"/><text x="495.4" y="61" font-size="12.5" fill="#f0efec">53.0%<tspan fill="#c3c2b7"></tspan></text>
-<line x1="0" y1="98" x2="700" y2="98" stroke="#3a3a38" stroke-width="1"/><text x="250" y="118" font-size="11.5" font-weight="600" fill="#c3c2b7" letter-spacing="0.06em">PARTS OF THE RESULT, NOT THE RESULT</text>
-<text x="236" y="142" font-size="14" font-weight="600" fill="#f0efec" text-anchor="end">Found without leaking</text><text x="236" y="158" font-size="11.5" fill="#c3c2b7" text-anchor="end">107 recall cases, partial credit</text>
-<path d="M250,130 h242.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-242.0 z" fill="#3987e5" fill-opacity="0.45"/><text x="503.0" y="141" font-size="12.5" fill="#f0efec">54.7%<tspan fill="#c3c2b7"></tspan></text>
-<path d="M250,146 h338.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-338.8 z" fill="#d95926" fill-opacity="0.45"/><text x="599.8" y="157" font-size="12.5" fill="#f0efec">76.2%<tspan fill="#c3c2b7"></tspan></text>
-<text x="236" y="204" font-size="14" font-weight="600" fill="#f0efec" text-anchor="end">Worst leak rate</text><text x="236" y="220" font-size="11.5" fill="#c3c2b7" text-anchor="end">lower is better</text>
-<path d="M250,192 h143.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-143.9 z" fill="#3987e5" fill-opacity="0.45"/><text x="404.9" y="203" font-size="12.5" fill="#f0efec">32.9%<tspan fill="#c3c2b7"> (scope)</tspan></text>
-<path d="M250,208 h348.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-348.8 z" fill="#d95926" fill-opacity="0.45"/><text x="609.8" y="219" font-size="12.5" fill="#f0efec">78.4%<tspan fill="#c3c2b7"> (forget)</tspan></text>
+<path d="M250,34 h252.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-252.2 z" fill="#3987e5"/><text x="513.2" y="45" font-size="12.5" fill="#f0efec">56.9%</text>
+<path d="M250,50 h234.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-234.4 z" fill="#d95926"/><text x="495.4" y="61" font-size="12.5" fill="#f0efec">53.0%</text>
+<line x1="0" y1="98" x2="700" y2="98" stroke="#3a3a38" stroke-width="1"/><text x="250" y="118" font-size="11.5" font-weight="600" fill="#c3c2b7" letter-spacing="0.06em">LEAK RATES, LOWER IS BETTER</text>
+<text x="236" y="142" font-size="14" font-weight="600" fill="#f0efec" text-anchor="end">Forget leak</text><text x="236" y="158" font-size="11.5" fill="#c3c2b7" text-anchor="end">88 probes</text>
+<path d="M250,130 h129.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-129.0 z" fill="#3987e5" fill-opacity="0.45"/><text x="390.0" y="141" font-size="12.5" fill="#f0efec">29.5%</text>
+<path d="M250,146 h348.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-348.8 z" fill="#d95926" fill-opacity="0.45"/><text x="609.8" y="157" font-size="12.5" fill="#f0efec">78.4%</text>
+<text x="236" y="204" font-size="14" font-weight="600" fill="#f0efec" text-anchor="end">Scope leak</text><text x="236" y="220" font-size="11.5" fill="#c3c2b7" text-anchor="end">73 probes</text>
+<path d="M250,192 h143.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-143.9 z" fill="#3987e5" fill-opacity="0.45"/><text x="404.9" y="203" font-size="12.5" fill="#f0efec">32.9%</text>
+<path d="M250,208 h335.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-335.0 z" fill="#d95926" fill-opacity="0.45"/><text x="596.0" y="219" font-size="12.5" fill="#f0efec">75.3%</text>
+<text x="236" y="266" font-size="14" font-weight="600" fill="#f0efec" text-anchor="end">Poisoning leak</text><text x="236" y="282" font-size="11.5" fill="#c3c2b7" text-anchor="end">68 probes</text>
+<path d="M250,254 h42.3 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-42.3 z" fill="#3987e5" fill-opacity="0.45"/><text x="303.3" y="265" font-size="12.5" fill="#f0efec">10.3%</text>
+<path d="M250,270 h254.1 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-254.1 z" fill="#d95926" fill-opacity="0.45"/><text x="515.1" y="281" font-size="12.5" fill="#f0efec">57.4%</text>
+<text x="236" y="328" font-size="14" font-weight="600" fill="#f0efec" text-anchor="end">Secrets leak</text><text x="236" y="344" font-size="11.5" fill="#c3c2b7" text-anchor="end">29 probes</text>
+<path d="M250,316 h42.6 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-42.6 z" fill="#3987e5" fill-opacity="0.45"/><text x="303.6" y="327" font-size="12.5" fill="#f0efec">10.3%</text>
+<path d="M250,332 h182.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-182.2 z" fill="#d95926" fill-opacity="0.45"/><text x="443.2" y="343" font-size="12.5" fill="#f0efec">41.4%</text>
 </svg>

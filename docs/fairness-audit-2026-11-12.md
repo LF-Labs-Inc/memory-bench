@@ -12,9 +12,14 @@ Runs used:
 - test: `results/reference/dawnmere/20261110T161902Z-test-s0` and `results/reference/mem0/20261110T184704Z-test-s0`
   (273 cases each)
 
-"Found without leaking" below is over the `context_recall` cases: the share of each case's needed facts that the
-injected context carried (by tokens, then by the judge for those the tokens missed), counted as 0 for a case whose
-context carried anything forbidden, averaged over cases.
+Since 2026-11-14 memory-bench publishes no recall figure in any form, raw or leak-adjusted: not in the README, its
+chart, `report.md` or the reference comparisons. Systems are compared by answered right (cases passed over cases
+scored), with every leak rate and the pass rate of every area beside it. The leak-adjusted figure this audit
+introduced ("found without leaking") was dropped too: it catches a leak only inside the recall cases, where the leak
+penalty barely moves it, while the leak probes themselves show the leaks; it covers about one case in ten (23 of the
+273, 107 of the 1,040); it inherits the unequal intake in finding 2; and answered right already counts a case whose
+needed facts were missing. The findings below keep what was learned about the scorer and the adapters, with no figure
+comparing the systems on recall.
 
 ## Findings
 
@@ -23,11 +28,9 @@ context carried anything forbidden, averaged over cases.
 `harness/score.py:749-757` sets a case's `recall` from the needed facts before the leak check; a forbidden hit then
 zeroes the case's score and pass (`harness/score.py:815-816`) but leaves `recall` as it was. `harness/report.py`
 averaged `r["recall"]` (line 140 before this change). So a context that carried the needed fact together with
-forbidden content counted as full recall. The figure now reported counts a case that leaked as not found.
-
-On test (n=23 recall cases), found without leaking: Mem0 17/23 (73.9%), Dawnmere 15/23 (65.2%). On dev (n=29):
-Mem0 75.9% (four recall cases leaked: d-forget-0115, d-forget-0116, d-poisoning-0093, d-poisoning-0126), Dawnmere
-70.7% (one: d-forget-0115).
+forbidden content counted as full recall. The fix stays: `summary.json` also records a leak-adjusted recall, which
+counts a case that leaked as not found. Pass and fail were never affected, so answered right, the area pass rates and
+the leak rates are unchanged by it.
 
 ### 2. Unequal intake of other people's words
 
@@ -36,29 +39,19 @@ Mem0 as a `role: user` message, `"Name: text"`. `harness/adapters/_dawnmere_brid
 mode) writes those turns into the Claude Code transcript as `Read` or `WebFetch` tool results, which the engine by
 design never saves as the user's words (`harness/adapters/COMPETITORS.md`, the Dawnmere table). So Mem0 extracts
 memories directly from texts, emails, meetings and web pages; Dawnmere learns from them only through what the user or
-the assistant said about them.
+the assistant said about them. That affects every comparison of the two rows, including the area pass rates where
+Mem0 passes more cases (retrieval, attribution, multi-hop), and its size is not known until a matched-intake run is
+made (below).
 
-On the 244 dev cases, the 29 recall cases need 40 facts. Split by who stated each fact (`stated_by` in
-`world/truth.jsonl`), counting a fact as found only when its case's context carried nothing forbidden:
-
-| needed facts stated by | Dawnmere found without leaking | Mem0 found without leaking |
-|---|---|---|
-| the user or the assistant (31) | 27 (87.1%, 95% interval 71 to 95%) | 26 (83.9%, 67 to 93%) |
-| other people (9) | 2 (22.2%, 6 to 55%) | 6 (66.7%, 35 to 88%) |
-
-So on dev the gap between the two is in the facts other people stated; on the user's and the assistant's facts
-Dawnmere is level with Mem0. The split is computed from the two runs' `cases.jsonl` on the 244 shared ids: a fact
-counts when it is not in the case's `detail.missing_facts` and the case has no leak.
-
-The facts' `stated_by` is read from the current `world/truth.jsonl`. The Mem0 dev run was scored on an earlier data
-fingerprint than the Dawnmere one; on all 29 recall cases the two records list the same needed facts.
+`summary.json` keeps, as a machine record, the share of needed facts found split by who stated each fact (`stated_by`
+in `world/truth.jsonl`: the user or the assistant, or anyone else). It is computed from a dev run's `cases.jsonl`; a
+test run saves no per-case missing facts, so it has no such split.
 
 ### 3. Small n
 
-The figure is over the 23 `context_recall` cases of the test half, not over its 273 cases (29 of the 244 on dev).
-The 95% Wilson intervals on test are 54 to 87% for Mem0's 73.9% and 45 to 81% for Dawnmere's 65.2%. Counting cases
-fully found without leaking, 17/23 against 15/23 gives a two-sided Fisher exact p of about 0.75. The origin split on
-dev is smaller still (9 facts by other people).
+The recall cases (`context_recall`) are 23 of the 273 cases of the earlier test cut, 29 of the 244 on dev and 107 of
+the 1,040 of the whole test half. A recall figure over them carries a wide interval and, as finding 2 says, unequal
+input; it is one reason no recall figure is published.
 
 ### 4. Lenient match on a short value (minor)
 
@@ -68,19 +61,14 @@ by its tokens; the memory is about an accident, not where she usually shops. One
 
 ## Fixed now
 
-- `harness/report.py` adds to `summary.json` `context` (and to `report.md`): `recall_n`, `recall_ci95`,
-  `recall_without_leak_mean` (a case's recall, or 0 when it had a forbidden hit), `recall_without_leak_ci95`, and
-  `recall_by_fact_origin` (split by who stated each needed fact: the user or the assistant, or anyone else, with
-  intervals). Existing keys and values are unchanged. Intervals are Wilson 95% intervals that take a case as one trial,
-  approximate when a case's recall is a fraction. Tests in `tests/test_report.py`.
-- `tools/fairness_recall.py` recomputes these from the saved runs with no model calls: every dev run from its
-  `cases.jsonl`, on all its cases and on the 244 shared ids; the two test runs from `summary.json` only. For test,
-  recall found without leaking is `by_scoring.context_recall.mean_score`. That equals the new figure when every
-  `context_recall` case has needed facts and none is an abstain case below L3 (whose near-miss rule can also zero the
-  score); on every dev run here the two figures are identical. There is no origin
-  split for test: it needs each case's missing facts, which a test run does not save.
-- `README.md`, held-out section: n=23, the intervals and the leak-adjusted figures, and one sentence on intake with a
-  link here. (Since 2026-11-14 the README and this audit state only the leak-adjusted figure, not the raw one.)
+- `harness/report.py` adds to `summary.json` `context`: `recall_n`, `recall_ci95`, `recall_without_leak_mean` (a
+  case's recall, or 0 when it had a forbidden hit), `recall_without_leak_ci95`, and `recall_by_fact_origin` (split by
+  who stated each needed fact). Existing keys and values are unchanged. These are machine records; since 2026-11-14
+  `report.md` prints none of them, nor any recall mean or mean-score column. Tests in `tests/test_report.py`.
+- `tools/fairness_recall.py` recomputes these from the saved runs with no model calls and prints them as tables. It is
+  a maintainers' tool for checking the records, not a published table.
+- `README.md`, held-out section: one sentence on intake with a link here. It states no recall figure (since
+  2026-11-14).
 
 ## Not done
 
@@ -90,5 +78,3 @@ by its tokens; the memory is about an accident, not where she usually shops. One
   track (`results/reference/dawnmere-equal-access`) is not that run: it reproduces Jarvis's intake (saved contacts
   only, capped per run and per day) on engine 0.1.3, on the same 244 dev cases.
 - **The short-value match** in finding 4 is left as it is.
-- **More recall cases.** With 23 test recall cases, differences under about 20 points are within noise; only more
-  cases or more runs change that. The whole test half (1,040 cases, 2026-11-12) has 107.
