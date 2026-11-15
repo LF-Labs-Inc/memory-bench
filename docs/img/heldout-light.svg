@@ -1,18 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 246" width="760" height="246" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Held-out test split, 273 cases: overall score, needed facts found and worst leak rate for Dawnmere 0.1.7 and Mem0">
-<rect x="250" y="6" width="12" height="12" rx="3" fill="#2a78d6"/><text x="268" y="16" font-size="13" fill="#0b0b0b">Dawnmere 0.1.7</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 280" width="760" height="280" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" role="img" aria-label="Held-out test split, 1,040 cases: share answered right, found without leaking and worst leak rate for Dawnmere 0.1.11 and Mem0">
+<rect x="250" y="6" width="12" height="12" rx="3" fill="#2a78d6"/><text x="268" y="16" font-size="13" fill="#0b0b0b">Dawnmere 0.1.11</text>
 <rect x="400" y="6" width="12" height="12" rx="3" fill="#eb6834"/><text x="418" y="16" font-size="13" fill="#0b0b0b">Mem0</text>
-<line x1="250.0" y1="28" x2="250.0" y2="224" stroke="#e4e3df" stroke-width="1"/><text x="250.0" y="240" font-size="11" fill="#52514e" text-anchor="middle">0%</text>
-<line x1="362.5" y1="28" x2="362.5" y2="224" stroke="#e4e3df" stroke-width="1"/><text x="362.5" y="240" font-size="11" fill="#52514e" text-anchor="middle">25%</text>
-<line x1="475.0" y1="28" x2="475.0" y2="224" stroke="#e4e3df" stroke-width="1"/><text x="475.0" y="240" font-size="11" fill="#52514e" text-anchor="middle">50%</text>
-<line x1="587.5" y1="28" x2="587.5" y2="224" stroke="#e4e3df" stroke-width="1"/><text x="587.5" y="240" font-size="11" fill="#52514e" text-anchor="middle">75%</text>
-<line x1="700.0" y1="28" x2="700.0" y2="224" stroke="#e4e3df" stroke-width="1"/><text x="700.0" y="240" font-size="11" fill="#52514e" text-anchor="middle">100%</text>
-<text x="236" y="46" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="end">Overall score</text><text x="236" y="62" font-size="11.5" fill="#52514e" text-anchor="end">mean of 14 area pass rates</text>
-<path d="M250,34 h269.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-269.9 z" fill="#2a78d6"/><text x="530.9" y="45" font-size="12.5" fill="#0b0b0b">60.9%<tspan fill="#52514e"></tspan></text>
-<path d="M250,50 h257.7 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-257.7 z" fill="#eb6834"/><text x="518.7" y="61" font-size="12.5" fill="#0b0b0b">58.1%<tspan fill="#52514e"></tspan></text>
-<text x="236" y="108" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="end">Needed facts found</text><text x="236" y="124" font-size="11.5" fill="#52514e" text-anchor="end">share that reached the context</text>
-<path d="M250,96 h309.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-309.0 z" fill="#2a78d6"/><text x="570.0" y="107" font-size="12.5" fill="#0b0b0b">69.6%<tspan fill="#52514e"></tspan></text>
-<path d="M250,112 h426.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-426.4 z" fill="#eb6834"/><text x="687.4" y="123" font-size="12.5" fill="#0b0b0b">95.7%<tspan fill="#52514e"></tspan></text>
-<text x="236" y="170" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="end">Worst leak rate</text><text x="236" y="186" font-size="11.5" fill="#52514e" text-anchor="end">lower is better</text>
-<path d="M250,158 h138.1 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-138.1 z" fill="#2a78d6"/><text x="399.1" y="169" font-size="12.5" fill="#0b0b0b">31.6%<tspan fill="#52514e"> (scope)</tspan></text>
-<path d="M250,174 h311.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-311.0 z" fill="#eb6834"/><text x="572.0" y="185" font-size="12.5" fill="#0b0b0b">70.0%<tspan fill="#52514e"> (poisoning)</tspan></text>
+<line x1="250.0" y1="28" x2="250.0" y2="258" stroke="#e4e3df" stroke-width="1"/><text x="250.0" y="274" font-size="11" fill="#52514e" text-anchor="middle">0%</text>
+<line x1="362.5" y1="28" x2="362.5" y2="258" stroke="#e4e3df" stroke-width="1"/><text x="362.5" y="274" font-size="11" fill="#52514e" text-anchor="middle">25%</text>
+<line x1="475.0" y1="28" x2="475.0" y2="258" stroke="#e4e3df" stroke-width="1"/><text x="475.0" y="274" font-size="11" fill="#52514e" text-anchor="middle">50%</text>
+<line x1="587.5" y1="28" x2="587.5" y2="258" stroke="#e4e3df" stroke-width="1"/><text x="587.5" y="274" font-size="11" fill="#52514e" text-anchor="middle">75%</text>
+<line x1="700.0" y1="28" x2="700.0" y2="258" stroke="#e4e3df" stroke-width="1"/><text x="700.0" y="274" font-size="11" fill="#52514e" text-anchor="middle">100%</text>
+<text x="236" y="46" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="end">Answered right</text><text x="236" y="62" font-size="11.5" fill="#52514e" text-anchor="end">the result, all 1,040 cases</text>
+<path d="M250,34 h252.2 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-252.2 z" fill="#2a78d6"/><text x="513.2" y="45" font-size="12.5" fill="#0b0b0b">56.9%<tspan fill="#52514e"></tspan></text>
+<path d="M250,50 h234.4 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-234.4 z" fill="#eb6834"/><text x="495.4" y="61" font-size="12.5" fill="#0b0b0b">53.0%<tspan fill="#52514e"></tspan></text>
+<line x1="0" y1="98" x2="700" y2="98" stroke="#e4e3df" stroke-width="1"/><text x="250" y="118" font-size="11.5" font-weight="600" fill="#52514e" letter-spacing="0.06em">PARTS OF THE RESULT, NOT THE RESULT</text>
+<text x="236" y="142" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="end">Found without leaking</text><text x="236" y="158" font-size="11.5" fill="#52514e" text-anchor="end">107 recall cases, partial credit</text>
+<path d="M250,130 h242.0 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-242.0 z" fill="#2a78d6" fill-opacity="0.45"/><text x="503.0" y="141" font-size="12.5" fill="#0b0b0b">54.7%<tspan fill="#52514e"></tspan></text>
+<path d="M250,146 h338.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-338.8 z" fill="#eb6834" fill-opacity="0.45"/><text x="599.8" y="157" font-size="12.5" fill="#0b0b0b">76.2%<tspan fill="#52514e"></tspan></text>
+<text x="236" y="204" font-size="14" font-weight="600" fill="#0b0b0b" text-anchor="end">Worst leak rate</text><text x="236" y="220" font-size="11.5" fill="#52514e" text-anchor="end">lower is better</text>
+<path d="M250,192 h143.9 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-143.9 z" fill="#2a78d6" fill-opacity="0.45"/><text x="404.9" y="203" font-size="12.5" fill="#0b0b0b">32.9%<tspan fill="#52514e"> (scope)</tspan></text>
+<path d="M250,208 h348.8 a4,4 0 0 1 4,4 v6 a4,4 0 0 1 -4,4 h-348.8 z" fill="#eb6834" fill-opacity="0.45"/><text x="609.8" y="219" font-size="12.5" fill="#0b0b0b">78.4%<tspan fill="#52514e"> (forget)</tspan></text>
 </svg>

@@ -41,6 +41,11 @@ HOME = os.environ["HOME"]   # the fake home: never created, so no file memories 
 TRANSCRIPTS = STORE / "transcripts"
 
 
+def transcript(session_id):
+    """A session's transcript where Claude Code keeps one: <projects>/<folder>/<session id>.jsonl."""
+    return TRANSCRIPTS / f"{re.sub(r'[^A-Za-z0-9_.-]', '_', session_id)}.jsonl"
+
+
 def log(msg):
     print(f"[bridge {_time.strftime('%H:%M:%S')}] {msg}", file=sys.stderr, flush=True)
 
@@ -202,6 +207,9 @@ def _job_llm_json(prompt, schema, system, *, job="other", **kw):
 llm.llm_json = _job_llm_json
 
 from lflabs_memory import mem  # noqa: E402
+# Claude Code's transcripts are <projects>/<folder>/<session id>.jsonl, and since engine 0.1.6 a hook call counts as
+# Claude Code's (desk) only for a transcript there; anything else is an unknown client that sees work only.
+mem.CLAUDE_PROJECTS = STORE
 for _sub in ("access", "adapt", "claimstore", "excerpts", "facets_live", "instant", "provenance", "safetopics",
              "screen", "whatsup", "remote", "owner", "models"):
     try:
@@ -250,6 +258,9 @@ ITEM_RE = re.compile(r"^- #(c?\d+)\b", re.M)
 # ---------- equal access (DAWNMERE_BENCH_ACCESS=equal): Jarvis's adapter's intake, on this engine ----------
 
 ACCESS = os.environ.get("DAWNMERE_BENCH_ACCESS", "product")
+INBOUND_ASKED = ("inbound_text", "inbound_email", "web")  # channels whose sessions can arrive with no user turn
+PHONE_VIEWS = ("channel-aware", "channel-aware-strict")  # remote probes get Bridge._phone_view (COMPETITORS.md)
+PHONE_HIDDEN_CLAIM_CHANNELS = ("meeting", "read")
 CONTACT_RE = re.compile(r"p[\w-]+")  # the harness's contact ids (p001, p_juno); u..., unknown, bystander, web are not
 BRAIN_RECALLS = 4      # own recall calls honoured per stretch (Jarvis's adapter)
 BRAIN_RECALL_K = 20
@@ -410,7 +421,7 @@ class Bridge:
             CLOCK.now = min(epoch(f["valid_from"]), now) if f.get("valid_from") and now else now
             text = f.get("text") or f"{f['subject']} {f['predicate']}: {f['value']}"
             mine = f.get("stated_by") == "principal"
-            mem.remember(self.db, text, "user" if mine else "reference", origin="hao_typed" if mine else "outside",
+            mem.remember(self.db, text, "user" if mine else "reference", origin="owner_typed" if mine else "outside",
                          via="desk")
         CLOCK.now = now
         self.worker()
@@ -446,7 +457,7 @@ class Bridge:
                 return self._meeting(s)
         # Every channel the same way, remote included: the engine is given no channel (as Mem0 and Graphiti are not)
         sid = s["session_id"]
-        path = TRANSCRIPTS / f"{re.sub(r'[^A-Za-z0-9_.-]', '_', sid)}.jsonl"
+        path = transcript(sid)
         self._n = sum(1 for _ in open(path)) if path.exists() else 0
         tool = "WebFetch" if s["channel"] == "web" else "Read"
         base = {"session_id": sid, "transcript_path": str(path), "cwd": HOME}
@@ -456,6 +467,10 @@ class Bridge:
         last_pass = CLOCK.now
         stats = {"turns": len(turns), "worker_passes": 0, "brain_calls": 0}
         segment, mine = [], 0  # equal access: the turns since the last brain step, and the user's turns among them
+        # An inbound text, email or web page with no user turn: no real session starts without a typed prompt, so the
+        # user asks for each one in words that carry no facts (approved by the maintainers 2026-11-12)
+        ask = (ACCESS != "equal" and s["channel"] in INBOUND_ASKED
+               and not any(t["speaker"] == "principal" for t in turns))
         for i, turn in enumerate(turns):
             t = epoch(turn["ts"])
             if t - last_pass >= 60:  # the daemon's worker passes once a minute
@@ -483,7 +498,12 @@ class Bridge:
                 segment.append({"kind": "ASSISTANT", "text": text})
             else:  # anyone else's words reach a Claude Code session as content the assistant read
                 name = turn.get("speaker_name") or who
-                tid = "toolu_bench" + hashlib.sha256(f"{sid}:{i}".encode()).hexdigest()[:16]
+                if ask:
+                    prompt = "open this page" if s["channel"] == "web" else f"read the new message from {name}"
+                    self._write(path, sid, [{"type": "user", "timestamp": iso(t),
+                                             "message": {"role": "user", "content": prompt}}])
+                    self._hook(mem.hook_prompt, {**base, "hook_event_name": "UserPromptSubmit", "prompt": prompt})
+                tid ="toolu_bench" + hashlib.sha256(f"{sid}:{i}".encode()).hexdigest()[:16]
                 self._write(path, sid, [
                     {"type": "assistant", "timestamp": iso(t), "message": {"role": "assistant", "content": [
                         {"type": "tool_use", "id": tid, "name": tool, "input": {"source": name}}]}},
@@ -682,20 +702,81 @@ class Bridge:
             keep.append(line)
         return "\n".join(keep) if any_left else ""
 
+    # --- channel-aware and channel-aware-strict: the phone's view of a remote probe's context ---
+
+    def _without(self, text, hidden):
+        """text without the memory and claim lines whose id ("12", "c12") hidden() names; nothing at all when no item
+        line is left (as _telegram_view)."""
+        keep, any_left = [], False
+        for line in text.split("\n"):
+            m = ITEM_RE.match(line)
+            if m and hidden(m.group(1)):
+                continue
+            any_left |= bool(m)
+            keep.append(line)
+        return "\n".join(keep) if any_left else ""
+
+    def _claim(self, cid):
+        try:
+            return self.db.execute("select * from claims where id = ?", (int(cid[1:]),)).fetchone()
+        except Exception:  # no claims table yet
+            return None
+
+    def _phone_hidden_claim(self, item):
+        """A claim the phone never sees: one whose channel is a meeting or something the assistant read (the engine's
+        claims.channel; "read" comes with the engine's others-words work, after 0.1.10)."""
+        if not item.startswith("c"):
+            return False
+        row = self._claim(item)
+        return bool(row) and row["channel"] in PHONE_HIDDEN_CLAIM_CHANNELS
+
+    def _withheld_item(self, item):
+        """Health or money, as the engine withholds it from Telegram: mem._withheld for a memory, claimstore.withheld for
+        a claim (their sensitivity labels when they have them, else the WITHHELD word list)."""
+        if item.startswith("c"):
+            row = self._claim(item)
+            if row is None:
+                return False
+            from lflabs_memory import claimstore
+            return claimstore.withheld(mem, self.db, row)
+        row = self.db.execute("select id, content, origin from memories where id = ?", (int(item),)).fetchone()
+        return bool(row) and mem._withheld(row)
+
+    def _phone_view(self, text, strict=False):
+        """The harness's phone view of a remote probe's context (the generic profile has no phone scope of its own:
+        RESTRICTED has no "telegram"): _telegram_view (memories from a meeting or a text, or unfiled, left out), then
+        claims from a meeting or a read left out; strict: health and money withheld too."""
+        text = self._without(self._telegram_view(text), self._phone_hidden_claim)
+        return self._without(text, self._withheld_item) if strict and text else text
+
     # --- context: what the prompt hook adds before the model sees the prompt ---
 
     def context(self, prompt, channel, session_id):
         t0 = _time.perf_counter()
-        base = {"session_id": session_id, "cwd": HOME, "transcript_path": str(TRANSCRIPTS / "probe.jsonl")}
-        # The same on every channel, remote included (no channel awareness, as for Mem0 and Graphiti)
+        base = probe_payload(channel, session_id)
+        # The same on every channel, remote included (no channel awareness, as for Mem0 and Graphiti); the
+        # channel-aware modes change what a remote probe is sent (probe_payload) or shown (_phone_view)
         start = self._hook(mem.hook_session_start, {**base, "hook_event_name": "SessionStart", "source": "startup"})
         out = self._hook(mem.hook_prompt, {**base, "hook_event_name": "UserPromptSubmit", "prompt": prompt})
         parts = [(x or {}).get("hookSpecificOutput", {}).get("additionalContext") for x in (start, out)]
         text = "\n\n".join(p for p in parts if p)
         if ACCESS == "equal" and channel == "remote":
             text = self._telegram_view(text)
+        elif ACCESS in PHONE_VIEWS and channel == "remote":
+            text = self._phone_view(text, strict=ACCESS == "channel-aware-strict")
         ids = list(dict.fromkeys(m if m.startswith("c") else f"m{m}" for m in ITEM_RE.findall(text)))
         return {"text": text, "item_ids": ids, "latency_ms": (_time.perf_counter() - t0) * 1000}
+
+
+def probe_payload(channel, session_id):
+    """What a probe's hooks are sent, short of the event and the prompt. Claude Code's, at the desk (a transcript at
+    <projects>/<folder>/<session id>.jsonl), on every channel; with DAWNMERE_BENCH_ACCESS=channel-aware-workonly, a
+    remote probe comes from an app that is not Claude Code and names no client: no Claude Code transcript and no
+    LFLABS_MEMORY_CLIENT, so the engine's hook_client makes it the unknown client, which sees work only (engine 0.1.10
+    mem.hook_app, hook_client, client_hide; COMPETITORS.md)."""
+    if ACCESS == "channel-aware-workonly" and channel == "remote":
+        return {"session_id": session_id, "cwd": HOME}
+    return {"session_id": session_id, "cwd": HOME, "transcript_path": str(transcript(session_id))}
 
 
 def _engine_version():

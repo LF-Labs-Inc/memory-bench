@@ -386,7 +386,7 @@ Approximations and limits:
    channel: a `remote` session is saved and a `remote` probe is answered exactly like a `typed` one. Dawnmere's own
    per-app policies (a "work only" level for apps the user has not widened) apply to apps on the Mac and, in engine
    0.1.3, to remote access for cloud AIs, which ships off and which 0.1.4 removes; the benchmark's phone channel is
-   none of those, so no policy is applied to it.
+   none of those, so no policy is applied to it. The opt-in channel-aware modes below are the one exception.
 5. **The engine's budget applies.** `daily_calls = 200` model calls per day of the benchmark's clock, as released; a
    day that reaches it leaves the rest of that day's saving queued until the next day, as live.
 
@@ -419,6 +419,50 @@ its assistant's memory calls are whatever the assistant decides live. It is a di
 (Mem0-parity) mode, which the published Dawnmere row uses: report its rows as "equal access", next to the Jarvis rows,
 never in the same table as Mem0's or claude-mem's. Like-for-like with Mem0 would need Mem0 given the same brain step
 (its forget-capable `mem0_tools` adapter, on the unmerged fair-assistant-tools branch, 5fa095f) and the same intake.
+
+### Channel-aware (`DAWNMERE_BENCH_ACCESS=channel-aware`, `channel-aware-strict` or `channel-aware-workonly`)
+
+The default mode tells the engine nothing about the phone, so it cannot honour P6.1 (no health, money, private
+messages or meeting content on `remote`). These three modes change one thing: what a `remote` probe gets. Sessions,
+seeding, the worker and the probes on every other channel stay exactly as in the default mode: Claude Code at the
+desk, which sees all of memory. The run is named `dawnmere-<mode>`.
+
+| mode | the remote probe | what is left out on `remote` |
+|---|---|---|
+| `channel-aware` | the default mode's hooks, then the harness's phone view (`Bridge._phone_view`) of their context | memories from a meeting (`meeting:` source) or a text (project `messages`), or not filed yet (`_telegram_view`, the equal-access mode's remote view); and claims whose channel (`claims.channel`) is `meeting` or `read` |
+| `channel-aware-strict` | the same | the same, plus health and money: a memory the engine's `mem._withheld` withholds, a claim its `claimstore.withheld` withholds (their sensitivity labels when they have them, else the `WITHHELD` word list) |
+| `channel-aware-workonly` | hooks from an app that is not Claude Code and names no client: no Claude Code transcript, no `LFLABS_MEMORY_CLIENT` | what engine 0.1.10 gives its `unknown` client: `mem.hook_app` finds no app, `mem.hook_client` returns `("unknown", False)`, and a new app starts at work only (`new_client_entry`, `client_hide` with `KEYLESS_MODE`). It never sees the `people`, `personal`, `health-money` or `chats` sections |
+
+Why the phone view is the harness's own. The engine's model of the user's phone is a host's `telegram` scope
+(`LFLABS_MEMORY_SCOPE=telegram`, read by `mem.scope_of`). What that scope hides comes from the profile's
+`restricted` map, and the generic profile Dawnmere ships has none (`profiles/generic.py`: `restricted={}`). Under it
+the scope hides no section. So `channel-aware` filters the context in the harness instead, the way the equal-access
+mode already does for Jarvis's phone. It adds claims, because `_telegram_view` filters memories only, and a claim from
+a meeting or from something the assistant read would otherwise get through. The `read` channel arrives with the
+engine's "others' words" work (after 0.1.10). Under 0.1.10 no claim carries `meeting` or `read`, so for that engine the
+claim rule changes nothing. `channel-aware-workonly` is what the product does for an app it cannot identify. It is
+not dressed up as Codex: Codex is a coding agent on the Mac, and its payload carries Codex-only behaviour (its typed
+commands, handoff phrases, its counted name) that a phone chat does not have.
+
+What each costs. The engine maintainers measured these on dev with no model calls.
+
+- `channel-aware-strict`: on released engine 0.1.10, scope leak cases fell from 7 to 2. It cost one remote fact
+  (26 of 32 needed remote facts found, down to 25) and added no empty remote contexts. This is the variant to report.
+- `channel-aware` (phone view only): it removed exactly the three scope leaks that the newer engine's read claims had
+  added, with no recall lost. It leaves health and money on the phone.
+- `channel-aware-workonly`: it removed all seven scope leaks but over-blocked badly. Remote probes' needed facts fell
+  from 26 of 32 to 3, and 15 of the 26 remote questions that deserve an answer got an empty context, because this
+  persona's memory is almost all personal.
+
+Mem0 gets no channel in any mode, because it has none: no asking app and no access levels. Filtering its search by a
+channel kept in metadata would be a policy the benchmark wrote, not Mem0's. Its adapter is unchanged.
+
+How to report them. The recommended channel-aware row is `channel-aware-strict`. Report it next to the default
+mode's row on the same cases, never instead of it. The other two are alternatives: `channel-aware` shows what the
+phone view does alone, and `channel-aware-workonly` shows the product's default for an unidentified app, with its
+over-block. Always show the remote over-block rate (`headline.remote_over_block.rate`) beside the safety score,
+because every one of these modes trades leaks for over-blocking in its own way. The engine maintainers' replay rig
+measures them separately, and they change no published row by themselves.
 
 ## Cost and wall time
 

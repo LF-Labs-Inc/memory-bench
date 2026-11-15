@@ -29,7 +29,7 @@ adapter and is not Dawnmere.
 
 claude-mem, by area (pass rate): abstention 88.9, scope 65.0, forget 57.1, capture 23.3, poisoning 20.0,
 consolidation 15.4, temporal 9.1, silence 5.6, application 5.3, retrieval 4.8, attribution, multi_hop, robustness and
-update 0. Leak rates: poisoning 63.2, scope 21.1, forget 17.6. Context recall (token) 12.1%.
+update 0. Leak rates: poisoning 63.2, scope 21.1, forget 17.6.
 
 What drives claude-mem's row (`harness/adapters/COMPETITORS.md`): its session-start block is a recency index, the 10
 latest session summaries' request lines and the 50 latest observations' titles, with about 1,000 tokens of fixed

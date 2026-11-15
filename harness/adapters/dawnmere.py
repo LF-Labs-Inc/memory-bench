@@ -22,6 +22,13 @@ Switches (environment variables, read when the adapter is created):
                                   forget calls (a brain step), texts, email and meetings through their own intake, and
                                   Jarvis's remote view; the run is named dawnmere-equal-access. Default "product": what
                                   a Dawnmere install takes in
+  DAWNMERE_BENCH_ACCESS=channel-aware  as "product", except that a remote probe's context is the phone's view: memories
+                                  from a meeting or a text or unfiled, and claims from a meeting or a read, left out
+                                  (COMPETITORS.md, "channel-aware"); the run is named dawnmere-channel-aware
+  DAWNMERE_BENCH_ACCESS=channel-aware-strict  as channel-aware, with health and money withheld on remote too (the
+                                  engine's mem._withheld and claimstore.withheld); the channel-aware row to report
+  DAWNMERE_BENCH_ACCESS=channel-aware-workonly  as "product", except that a remote probe reaches the engine from an app
+                                  that is not Claude Code, which the engine shows work only
 """
 import atexit
 import hashlib
@@ -46,6 +53,7 @@ WHEEL_RE = re.compile(r"lflabs_memory_engine-(\d+\.\d+\.\d+[\w.]*)-py3-none-any\
 FAKE_HOME = "/home/joana"  # the bridge's HOME: never created, so the engine finds no file memories, apps or chats
 # config.toml as `dawnmere setup` writes it (the CLI's settings.render), with the persona's name as the owner's
 LLM_SETTINGS = {"backend": "claude-cli", "main_model": "haiku", "cheap_model": "haiku", "daily_calls": 200}
+ACCESS_MODES = ("product", "equal", "channel-aware", "channel-aware-strict", "channel-aware-workonly")
 PRODUCT_MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5", "opus": "claude-opus-5-5"}
 
 
@@ -141,10 +149,12 @@ class Dawnmere(Adapter):
         if self.models == "product":
             self.name = "dawnmere-product-models"
         self.access = os.environ.get("DAWNMERE_BENCH_ACCESS", "product")
-        if self.access not in ("product", "equal"):
-            raise AdapterError(f"DAWNMERE_BENCH_ACCESS {self.access!r}: product or equal")
+        if self.access not in ACCESS_MODES:
+            raise AdapterError(f"DAWNMERE_BENCH_ACCESS {self.access!r}: one of {', '.join(ACCESS_MODES)}")
         if self.access == "equal":
             self.name += "-equal-access"
+        elif self.access.startswith("channel-aware"):
+            self.name += "-" + self.access
         self.owner, self.tz = persona()
         self.info = None
         self.proc = None
@@ -164,11 +174,7 @@ class Dawnmere(Adapter):
         (store / "config.toml").write_text(
             f'version = 1\nprofile = "generic"\nowner_name = {json.dumps(self.owner)}\n\n[llm]\n'
             + "".join(f"{k} = {json.dumps(v)}\n" for k, v in LLM_SETTINGS.items()))
-        env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": FAKE_HOME, "TZ": self.tz,
-               "LANG": "en_US.UTF-8", "TMPDIR": os.environ.get("TMPDIR", "/tmp"),
-               "LFLABS_MEMORY_HOME": str(store), "LFLABS_MEMORY_MODELS": self.info["models"],
-               "LFLABS_MEMORY_SOCKET": str(store / "connector.sock"), "LFLABS_MEMORY_PROFILE": "generic",
-               "PYTHONDONTWRITEBYTECODE": "1", "ORT_DISABLE_TELEMETRY": "1", "DAWNMERE_BENCH_ACCESS": self.access}
+        env = self._env(store)
         # The log and the provenance sit beside the store (the harness replaces the store on every checkpoint).
         self.log_path = store.parent / "dawnmere-bridge.log"
         (store.parent / "dawnmere-engine.json").write_text(json.dumps({**self.info, "models_policy": self.models,
@@ -179,6 +185,14 @@ class Dawnmere(Adapter):
                                      stdout=subprocess.PIPE, stderr=self._log, text=True, env=env, cwd=str(store),
                                      bufsize=1)
         self.hello = self._call("hello")
+
+    def _env(self, store):
+        """The bridge's environment, for a store that already has its config.toml."""
+        return {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": FAKE_HOME, "TZ": self.tz,
+                "LANG": "en_US.UTF-8", "TMPDIR": os.environ.get("TMPDIR", "/tmp"),
+                "LFLABS_MEMORY_HOME": str(store), "LFLABS_MEMORY_MODELS": self.info["models"],
+                "LFLABS_MEMORY_SOCKET": str(store / "connector.sock"), "LFLABS_MEMORY_PROFILE": "generic",
+                "PYTHONDONTWRITEBYTECODE": "1", "ORT_DISABLE_TELEMETRY": "1", "DAWNMERE_BENCH_ACCESS": self.access}
 
     def _stop(self):
         p, self.proc = self.proc, None

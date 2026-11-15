@@ -6,18 +6,20 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNS = [("Dawnmere 0.1.7", "results/reference/dawnmere/20261110T161902Z-test-s0/summary.json"),
-        ("Mem0", "results/reference/mem0/20261110T184704Z-test-s0/summary.json")]
+RUNS = [("Dawnmere 0.1.11", "results/reference/dawnmere/20261112T014719Z-test-s0/summary.json"),
+        ("Mem0", "results/reference/mem0/20261112T014719Z-test-s0/summary.json")]
 THEMES = {"light": dict(ink="#0b0b0b", soft="#52514e", grid="#e4e3df", series=["#2a78d6", "#eb6834"]),
           "dark": dict(ink="#f0efec", soft="#c3c2b7", grid="#3a3a38", series=["#3987e5", "#d95926"])}
-W, LEFT, RIGHT, BAR, GAP, GROUP = 760, 250, 60, 14, 2, 30
+W, LEFT, RIGHT, BAR, GAP, GROUP, SPLIT = 760, 250, 60, 14, 2, 30, 34
 
 
 def measures(s):
     h, leak = s["headline"], s["headline"]["leak_rates"]
     worst = max(leak, key=lambda k: leak[k]["rate"])
-    return [("Overall score", "mean of 14 area pass rates", 100 * h["overall"], ""),
-            ("Needed facts found", "share that reached the context", 100 * s["context"]["recall_mean"], ""),
+    c = s["counts"]
+    return [("Answered right", "the result, all 1,040 cases", 100 * c["passed"] / c["scored"], ""),
+            ("Found without leaking", "107 recall cases, partial credit", 100 * s["context"]["recall_without_leak_mean"],
+             ""),
             ("Worst leak rate", "lower is better", 100 * leak[worst]["rate"], f" ({worst})")]
 
 
@@ -27,11 +29,11 @@ def draw(theme):
     span = W - LEFT - RIGHT
     rows = len(data[0][1])
     top = 34
-    height = top + rows * (len(data) * (BAR + GAP) + GROUP) + 26
+    height = top + rows * (len(data) * (BAR + GAP) + GROUP) + 26 + SPLIT
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {height}" width="{W}" height="{height}" '
          f'font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" role="img" '
-         f'aria-label="Held-out test split, 273 cases: overall score, needed facts found and worst leak rate for '
-         f'Dawnmere 0.1.7 and Mem0">']
+         f'aria-label="Held-out test split, 1,040 cases: share answered right, found without leaking and '
+         f'worst leak rate for Dawnmere 0.1.11 and Mem0">']
     for i, (name, _) in enumerate(data):  # legend
         x = LEFT + i * 150
         o.append(f'<rect x="{x}" y="6" width="12" height="12" rx="3" fill="{t["series"][i]}"/>'
@@ -41,7 +43,13 @@ def draw(theme):
         o.append(f'<line x1="{x:.1f}" y1="{top - 6}" x2="{x:.1f}" y2="{height - 22}" stroke="{t["grid"]}" stroke-width="1"/>'
                  f'<text x="{x:.1f}" y="{height - 6}" font-size="11" fill="{t["soft"]}" text-anchor="middle">{v}%</text>')
     for r in range(rows):
-        y0 = top + r * (len(data) * (BAR + GAP) + GROUP)
+        y0 = top + r * (len(data) * (BAR + GAP) + GROUP) + (SPLIT if r else 0)
+        if r == 1:  # everything below the first row is a part of the result, not the result
+            ys = y0 - GROUP - 2
+            o.append(f'<line x1="0" y1="{ys}" x2="{W - RIGHT}" y2="{ys}" stroke="{t["grid"]}" stroke-width="1"/>'
+                     f'<text x="{LEFT}" y="{ys + 20}" font-size="11.5" font-weight="600" fill="{t["soft"]}" '
+                     f'letter-spacing="0.06em">'
+                     f'PARTS OF THE RESULT, NOT THE RESULT</text>')
         label, note = data[0][1][r][0], data[0][1][r][1]
         o.append(f'<text x="{LEFT - 14}" y="{y0 + 12}" font-size="14" font-weight="600" fill="{t["ink"]}" '
                  f'text-anchor="end">{label}</text>'
@@ -50,7 +58,7 @@ def draw(theme):
             _, _, value, extra = ms[r]
             y, w = y0 + i * (BAR + GAP), span * value / 100
             o.append(f'<path d="M{LEFT},{y} h{w - 4:.1f} a4,4 0 0 1 4,4 v{BAR - 8} a4,4 0 0 1 -4,4 h-{w - 4:.1f} z" '
-                     f'fill="{t["series"][i]}"/>'
+                     f'fill="{t["series"][i]}"{"" if r == 0 else ' fill-opacity="0.45"'}/>'
                      f'<text x="{LEFT + w + 7:.1f}" y="{y + 11}" font-size="12.5" fill="{t["ink"]}">{value:.1f}%'
                      f'<tspan fill="{t["soft"]}">{extra}</tspan></text>')
     o.append("</svg>")

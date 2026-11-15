@@ -1,0 +1,46 @@
+{
+ "adapter": "mem0",
+ "adapter_spec": "mem0",
+ "run_id": "20261112T014719Z-test-s0",
+ "split": "test",
+ "areas": null,
+ "levels": null,
+ "cases": "1040 test-split case ids (all of them; private: the test half is not published)",
+ "sample": null,
+ "seed": 0,
+ "answerer_model": "claude-sonnet-5-5",
+ "judge_model": "claude-opus-5-5",
+ "judge_recall": true,
+ "strict_forbidden": false,
+ "data_root": "(maintainers' private checkout)",
+ "data_fingerprint": "7c4b40ad3c2f24eddfb331e67836ce5901faf4498dc8951a79ec94e0b53d154f",
+ "git_commit": "270263ecc434be33e07e9d4d9195b053f0b88547",
+ "n_cases": 1040,
+ "started": "2026-11-12T01:47:31+00:00",
+ "finished": "2026-11-12T04:33:43+00:00",
+ "replay": {
+  "ingested": 1710,
+  "maintained": 510,
+  "seeded": 105492,
+  "checkpoints": 798,
+  "groups": 68,
+  "cost": {
+   "calls": 1710,
+   "embed_calls": 112386,
+   "embedded_texts": 143861,
+   "model_calls": 1424,
+   "cache_hits": 286,
+   "failures": 0,
+   "input_tokens": 21162080,
+   "output_tokens": 646205
+  }
+ },
+ "harness_calls": {
+  "judge_recall": 20,
+  "judge_context": 274,
+  "judge_leak": 230,
+  "answer": 490,
+  "judge_answer": 423,
+  "rejudge": 35
+ }
+}
