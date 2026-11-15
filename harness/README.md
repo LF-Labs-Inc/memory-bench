@@ -177,8 +177,12 @@ truth facts injected are reported on a line of their own. The report also gives 
 p90), the sensitive truth facts sent (token-detected facts with a sensitivity tag: mean per case and share of cases
 with one, over all and over remote cases), and the system's upkeep: its reported cost outside probes per replayed
 world day (the midnights the replay crossed). `uv run python -m harness.curve RUN_DIR [RUN_DIR ...]` replays saved
-contexts cut to token budgets (250 to 8000) with no model call and prints recall, token leak rate and silence junk at
-each, a joined table on the cases all runs share, and each system's recall at another's leak rate.
+contexts cut to token budgets (250 to 8000) with no model call and prints found without leaking (a case's needed
+facts in the cut context, 0 when it carries anything forbidden), token leak rate and silence junk at each, a joined
+table on the cases all runs share, and each system's found without leaking at another's leak rate.
+`uv run python -m harness.report RUN_DIR [RUN_DIR ...]` rewrites a saved run's `report.md` from its `summary.json` and
+`cases.jsonl`, with no model call. `report.md` leads with answered right and gives recall only as found without
+leaking; `summary.json` keeps every recall field.
 
 ## Baselines
 

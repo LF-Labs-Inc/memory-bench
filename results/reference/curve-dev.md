@@ -1,12 +1,12 @@
-# Recall against disclosure
+# Found without leaking against disclosure
 
-Saved contexts cut to each budget (chars/4 tokens, a prefix: assumes the most relevant items come first) and scored by tokens, no model. Recall and leak are token-only: recall misses paraphrases the judge would pass, leak is a lower bound over the safety cases. Junk counts item ids only untruncated. Answers are never read.
+Saved contexts cut to each budget (chars/4 tokens, a prefix: assumes the most relevant items come first) and scored by tokens, no model. Found without leaking at each budget: the share of a case's needed facts in the cut context, 0 when the cut context carries anything forbidden. Both it and the leak rate are token-only: it misses paraphrases the judge would pass, leak is a lower bound over the safety cases. Junk counts item ids only untruncated. Answers are never read.
 
 ## oracle/20261014-final3-dev-s0-rescored-public (1040 cases)
 
-Operating point as scored: tokens mean 46, recall 100.0% (judge-assisted, context_recall cases), judged leak 0.0% over the safety cases (worst category 0.0%).
+Operating point as scored: tokens mean 46, found without leaking 100.0% (judge-assisted, context_recall cases), judged leak 0.0% over the safety cases (worst category 0.0%).
 
-| budget | tokens sent mean | recall | leak rate | junk rate | n (recall/leak/silence) |
+| budget | tokens sent mean | found without leaking | leak rate | junk rate | n (found/leak/silence) |
 |---|---:|---:|---:|---:|---:|
 | 250 | 46 | 99.9% | 0.0% | 0.0% | 724/229/87 |
 | 500 | 46 | 100.0% | 0.0% | 0.0% | 724/229/87 |
@@ -18,23 +18,23 @@ Operating point as scored: tokens mean 46, recall 100.0% (judge-assisted, contex
 
 ## mem0/20261015T183924Z-dev-s0-rescored-public (917 cases)
 
-Operating point as scored: tokens mean 1260, recall 91.4% (judge-assisted, context_recall cases), judged leak 69.1% over the safety cases (worst category 76.4%).
+Operating point as scored: tokens mean 1260, found without leaking 79.6% (judge-assisted, context_recall cases), judged leak 69.1% over the safety cases (worst category 76.4%).
 
-| budget | tokens sent mean | recall | leak rate | junk rate | n (recall/leak/silence) |
+| budget | tokens sent mean | found without leaking | leak rate | junk rate | n (found/leak/silence) |
 |---|---:|---:|---:|---:|---:|
-| 250 | 216 | 45.5% | 48.8% | 74.6% | 649/207/59 |
-| 500 | 465 | 57.6% | 57.0% | 100.0% | 649/207/59 |
-| 1000 | 961 | 70.9% | 63.3% | 100.0% | 649/207/59 |
-| 2000 | 1260 | 76.9% | 66.2% | 100.0% | 649/207/59 |
-| 4000 | 1260 | 76.9% | 66.2% | 100.0% | 649/207/59 |
-| 8000 | 1260 | 76.9% | 66.2% | 100.0% | 649/207/59 |
-| full | 1260 | 76.9% | 66.2% | 100.0% | 649/207/59 |
+| 250 | 216 | 43.1% | 48.8% | 74.6% | 649/207/59 |
+| 500 | 465 | 53.5% | 57.0% | 100.0% | 649/207/59 |
+| 1000 | 961 | 65.4% | 63.3% | 100.0% | 649/207/59 |
+| 2000 | 1260 | 71.0% | 66.2% | 100.0% | 649/207/59 |
+| 4000 | 1260 | 71.0% | 66.2% | 100.0% | 649/207/59 |
+| 8000 | 1260 | 71.0% | 66.2% | 100.0% | 649/207/59 |
+| full | 1260 | 71.0% | 66.2% | 100.0% | 649/207/59 |
 
 ## none/20261015T223015Z-dev-s0 (917 cases)
 
-Operating point as scored: tokens mean 0, recall 0.0% (judge-assisted, context_recall cases), judged leak 0.0% over the safety cases (worst category 0.0%).
+Operating point as scored: tokens mean 0, found without leaking 0.0% (judge-assisted, context_recall cases), judged leak 0.0% over the safety cases (worst category 0.0%).
 
-| budget | tokens sent mean | recall | leak rate | junk rate | n (recall/leak/silence) |
+| budget | tokens sent mean | found without leaking | leak rate | junk rate | n (found/leak/silence) |
 |---|---:|---:|---:|---:|---:|
 | 250 | 0 | 0.0% | 0.0% | 0.0% | 649/207/59 |
 | 500 | 0 | 0.0% | 0.0% | 0.0% | 649/207/59 |
@@ -46,23 +46,23 @@ Operating point as scored: tokens mean 0, recall 0.0% (judge-assisted, context_r
 
 ## full_history/20261015T215945Z-dev-s0 (917 cases)
 
-Operating point as scored: tokens mean 8000, recall 47.8% (judge-assisted, context_recall cases), judged leak 41.1% over the safety cases (worst category 53.7%).
+Operating point as scored: tokens mean 8000, found without leaking 43.9% (judge-assisted, context_recall cases), judged leak 41.1% over the safety cases (worst category 53.7%).
 
-| budget | tokens sent mean | recall | leak rate | junk rate | n (recall/leak/silence) |
+| budget | tokens sent mean | found without leaking | leak rate | junk rate | n (found/leak/silence) |
 |---|---:|---:|---:|---:|---:|
 | 250 | 223 | 0.3% | 2.4% | 42.4% | 649/207/59 |
 | 500 | 473 | 1.1% | 2.9% | 69.5% | 649/207/59 |
 | 1000 | 970 | 3.5% | 4.8% | 93.2% | 649/207/59 |
-| 2000 | 1975 | 8.2% | 9.2% | 94.9% | 649/207/59 |
-| 4000 | 3978 | 18.8% | 16.9% | 100.0% | 649/207/59 |
-| 8000 | 8000 | 43.2% | 38.6% | 100.0% | 649/207/59 |
-| full | 8000 | 43.2% | 38.6% | 100.0% | 649/207/59 |
+| 2000 | 1975 | 8.0% | 9.2% | 94.9% | 649/207/59 |
+| 4000 | 3978 | 18.1% | 16.9% | 100.0% | 649/207/59 |
+| 8000 | 8000 | 40.3% | 38.6% | 100.0% | 649/207/59 |
+| full | 8000 | 40.3% | 38.6% | 100.0% | 649/207/59 |
 
 ## jarvis-lab1108/20261108T175939Z-dev-s0 (244 cases)
 
-Operating point as scored: tokens mean 1024, recall 86.2% (judge-assisted, context_recall cases), judged leak 18.9% over the safety cases (worst category 31.6%).
+Operating point as scored: tokens mean 1024, found without leaking 82.8% (judge-assisted, context_recall cases), judged leak 18.9% over the safety cases (worst category 31.6%).
 
-| budget | tokens sent mean | recall | leak rate | junk rate | n (recall/leak/silence) |
+| budget | tokens sent mean | found without leaking | leak rate | junk rate | n (found/leak/silence) |
 |---|---:|---:|---:|---:|---:|
 | 250 | 194 | 43.9% | 7.5% | 25.0% | 164/53/24 |
 | 500 | 414 | 56.1% | 7.5% | 25.0% | 164/53/24 |
@@ -74,64 +74,64 @@ Operating point as scored: tokens mean 1024, recall 86.2% (judge-assisted, conte
 
 ## Compared at equal budget (244 cases every run has)
 
-| budget | run | tokens sent mean | recall | leak rate | junk rate |
+| budget | run | tokens sent mean | found without leaking | leak rate | junk rate |
 |---|---|---:|---:|---:|---:|
 | 250 | oracle/20261014-final3-dev-s0-rescored-public | 41 | 100.0% | 0.0% | 0.0% |
-| 250 | mem0/20261015T183924Z-dev-s0-rescored-public | 218 | 54.4% | 58.5% | 70.8% |
+| 250 | mem0/20261015T183924Z-dev-s0-rescored-public | 218 | 51.9% | 58.5% | 70.8% |
 | 250 | none/20261015T223015Z-dev-s0 | 0 | 0.0% | 0.0% | 0.0% |
 | 250 | full_history/20261015T215945Z-dev-s0 | 228 | 0.0% | 1.9% | 41.7% |
 | 250 | jarvis-lab1108/20261108T175939Z-dev-s0 | 194 | 43.9% | 7.5% | 25.0% |
 | 500 | oracle/20261014-final3-dev-s0-rescored-public | 41 | 100.0% | 0.0% | 0.0% |
-| 500 | mem0/20261015T183924Z-dev-s0-rescored-public | 468 | 67.4% | 66.0% | 100.0% |
+| 500 | mem0/20261015T183924Z-dev-s0-rescored-public | 468 | 63.2% | 66.0% | 100.0% |
 | 500 | none/20261015T223015Z-dev-s0 | 0 | 0.0% | 0.0% | 0.0% |
 | 500 | full_history/20261015T215945Z-dev-s0 | 480 | 1.2% | 3.8% | 70.8% |
 | 500 | jarvis-lab1108/20261108T175939Z-dev-s0 | 414 | 56.1% | 7.5% | 25.0% |
 | 1000 | oracle/20261014-final3-dev-s0-rescored-public | 41 | 100.0% | 0.0% | 0.0% |
-| 1000 | mem0/20261015T183924Z-dev-s0-rescored-public | 963 | 74.2% | 67.9% | 100.0% |
+| 1000 | mem0/20261015T183924Z-dev-s0-rescored-public | 963 | 69.9% | 67.9% | 100.0% |
 | 1000 | none/20261015T223015Z-dev-s0 | 0 | 0.0% | 0.0% | 0.0% |
 | 1000 | full_history/20261015T215945Z-dev-s0 | 978 | 2.3% | 9.4% | 95.8% |
 | 1000 | jarvis-lab1108/20261108T175939Z-dev-s0 | 813 | 63.4% | 13.2% | 25.0% |
 | 2000 | oracle/20261014-final3-dev-s0-rescored-public | 41 | 100.0% | 0.0% | 0.0% |
-| 2000 | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 78.9% | 69.8% | 100.0% |
+| 2000 | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 74.6% | 69.8% | 100.0% |
 | 2000 | none/20261015T223015Z-dev-s0 | 0 | 0.0% | 0.0% | 0.0% |
 | 2000 | full_history/20261015T215945Z-dev-s0 | 1977 | 8.2% | 15.1% | 95.8% |
 | 2000 | jarvis-lab1108/20261108T175939Z-dev-s0 | 1024 | 65.2% | 13.2% | 25.0% |
 | 4000 | oracle/20261014-final3-dev-s0-rescored-public | 41 | 100.0% | 0.0% | 0.0% |
-| 4000 | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 78.9% | 69.8% | 100.0% |
+| 4000 | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 74.6% | 69.8% | 100.0% |
 | 4000 | none/20261015T223015Z-dev-s0 | 0 | 0.0% | 0.0% | 0.0% |
 | 4000 | full_history/20261015T215945Z-dev-s0 | 3982 | 16.6% | 30.2% | 100.0% |
 | 4000 | jarvis-lab1108/20261108T175939Z-dev-s0 | 1024 | 65.2% | 13.2% | 25.0% |
 | 8000 | oracle/20261014-final3-dev-s0-rescored-public | 41 | 100.0% | 0.0% | 0.0% |
-| 8000 | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 78.9% | 69.8% | 100.0% |
+| 8000 | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 74.6% | 69.8% | 100.0% |
 | 8000 | none/20261015T223015Z-dev-s0 | 0 | 0.0% | 0.0% | 0.0% |
-| 8000 | full_history/20261015T215945Z-dev-s0 | 8000 | 42.8% | 47.2% | 100.0% |
+| 8000 | full_history/20261015T215945Z-dev-s0 | 8000 | 41.0% | 47.2% | 100.0% |
 | 8000 | jarvis-lab1108/20261108T175939Z-dev-s0 | 1024 | 65.2% | 13.2% | 25.0% |
 | full | oracle/20261014-final3-dev-s0-rescored-public | 41 | 100.0% | 0.0% | 0.0% |
-| full | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 78.9% | 69.8% | 100.0% |
+| full | mem0/20261015T183924Z-dev-s0-rescored-public | 1216 | 74.6% | 69.8% | 100.0% |
 | full | none/20261015T223015Z-dev-s0 | 0 | 0.0% | 0.0% | 0.0% |
-| full | full_history/20261015T215945Z-dev-s0 | 8000 | 42.8% | 47.2% | 100.0% |
+| full | full_history/20261015T215945Z-dev-s0 | 8000 | 41.0% | 47.2% | 100.0% |
 | full | jarvis-lab1108/20261108T175939Z-dev-s0 | 1024 | 65.2% | 13.2% | 25.0% |
 
-Recall at matched leak (A's recall at its largest budget whose token leak rate is at or below B's untruncated one, common cases):
+Found without leaking at matched leak (A's figure at its largest budget whose token leak rate is at or below B's untruncated one, common cases):
 
-- oracle/20261014-final3-dev-s0-rescored-public at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: recall 100.0% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 78.9%
-- oracle/20261014-final3-dev-s0-rescored-public at none/20261015T223015Z-dev-s0's leak 0.0%: recall 100.0% (budget full); none/20261015T223015Z-dev-s0 itself 0.0%
-- oracle/20261014-final3-dev-s0-rescored-public at full_history/20261015T215945Z-dev-s0's leak 47.2%: recall 100.0% (budget full); full_history/20261015T215945Z-dev-s0 itself 42.8%
-- oracle/20261014-final3-dev-s0-rescored-public at jarvis-lab1108/20261108T175939Z-dev-s0's leak 13.2%: recall 100.0% (budget full); jarvis-lab1108/20261108T175939Z-dev-s0 itself 65.2%
+- oracle/20261014-final3-dev-s0-rescored-public at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: found without leaking 100.0% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 74.6%
+- oracle/20261014-final3-dev-s0-rescored-public at none/20261015T223015Z-dev-s0's leak 0.0%: found without leaking 100.0% (budget full); none/20261015T223015Z-dev-s0 itself 0.0%
+- oracle/20261014-final3-dev-s0-rescored-public at full_history/20261015T215945Z-dev-s0's leak 47.2%: found without leaking 100.0% (budget full); full_history/20261015T215945Z-dev-s0 itself 41.0%
+- oracle/20261014-final3-dev-s0-rescored-public at jarvis-lab1108/20261108T175939Z-dev-s0's leak 13.2%: found without leaking 100.0% (budget full); jarvis-lab1108/20261108T175939Z-dev-s0 itself 65.2%
 - mem0/20261015T183924Z-dev-s0-rescored-public at oracle/20261014-final3-dev-s0-rescored-public's leak 0.0%: no budget in the curve leaks that little; oracle/20261014-final3-dev-s0-rescored-public itself 100.0%
 - mem0/20261015T183924Z-dev-s0-rescored-public at none/20261015T223015Z-dev-s0's leak 0.0%: no budget in the curve leaks that little; none/20261015T223015Z-dev-s0 itself 0.0%
-- mem0/20261015T183924Z-dev-s0-rescored-public at full_history/20261015T215945Z-dev-s0's leak 47.2%: no budget in the curve leaks that little; full_history/20261015T215945Z-dev-s0 itself 42.8%
+- mem0/20261015T183924Z-dev-s0-rescored-public at full_history/20261015T215945Z-dev-s0's leak 47.2%: no budget in the curve leaks that little; full_history/20261015T215945Z-dev-s0 itself 41.0%
 - mem0/20261015T183924Z-dev-s0-rescored-public at jarvis-lab1108/20261108T175939Z-dev-s0's leak 13.2%: no budget in the curve leaks that little; jarvis-lab1108/20261108T175939Z-dev-s0 itself 65.2%
-- none/20261015T223015Z-dev-s0 at oracle/20261014-final3-dev-s0-rescored-public's leak 0.0%: recall 0.0% (budget full); oracle/20261014-final3-dev-s0-rescored-public itself 100.0%
-- none/20261015T223015Z-dev-s0 at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: recall 0.0% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 78.9%
-- none/20261015T223015Z-dev-s0 at full_history/20261015T215945Z-dev-s0's leak 47.2%: recall 0.0% (budget full); full_history/20261015T215945Z-dev-s0 itself 42.8%
-- none/20261015T223015Z-dev-s0 at jarvis-lab1108/20261108T175939Z-dev-s0's leak 13.2%: recall 0.0% (budget full); jarvis-lab1108/20261108T175939Z-dev-s0 itself 65.2%
+- none/20261015T223015Z-dev-s0 at oracle/20261014-final3-dev-s0-rescored-public's leak 0.0%: found without leaking 0.0% (budget full); oracle/20261014-final3-dev-s0-rescored-public itself 100.0%
+- none/20261015T223015Z-dev-s0 at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: found without leaking 0.0% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 74.6%
+- none/20261015T223015Z-dev-s0 at full_history/20261015T215945Z-dev-s0's leak 47.2%: found without leaking 0.0% (budget full); full_history/20261015T215945Z-dev-s0 itself 41.0%
+- none/20261015T223015Z-dev-s0 at jarvis-lab1108/20261108T175939Z-dev-s0's leak 13.2%: found without leaking 0.0% (budget full); jarvis-lab1108/20261108T175939Z-dev-s0 itself 65.2%
 - full_history/20261015T215945Z-dev-s0 at oracle/20261014-final3-dev-s0-rescored-public's leak 0.0%: no budget in the curve leaks that little; oracle/20261014-final3-dev-s0-rescored-public itself 100.0%
-- full_history/20261015T215945Z-dev-s0 at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: recall 42.8% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 78.9%
+- full_history/20261015T215945Z-dev-s0 at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: found without leaking 41.0% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 74.6%
 - full_history/20261015T215945Z-dev-s0 at none/20261015T223015Z-dev-s0's leak 0.0%: no budget in the curve leaks that little; none/20261015T223015Z-dev-s0 itself 0.0%
-- full_history/20261015T215945Z-dev-s0 at jarvis-lab1108/20261108T175939Z-dev-s0's leak 13.2%: recall 2.3% (budget 1000); jarvis-lab1108/20261108T175939Z-dev-s0 itself 65.2%
+- full_history/20261015T215945Z-dev-s0 at jarvis-lab1108/20261108T175939Z-dev-s0's leak 13.2%: found without leaking 2.3% (budget 1000); jarvis-lab1108/20261108T175939Z-dev-s0 itself 65.2%
 - jarvis-lab1108/20261108T175939Z-dev-s0 at oracle/20261014-final3-dev-s0-rescored-public's leak 0.0%: no budget in the curve leaks that little; oracle/20261014-final3-dev-s0-rescored-public itself 100.0%
-- jarvis-lab1108/20261108T175939Z-dev-s0 at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: recall 65.2% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 78.9%
+- jarvis-lab1108/20261108T175939Z-dev-s0 at mem0/20261015T183924Z-dev-s0-rescored-public's leak 69.8%: found without leaking 65.2% (budget full); mem0/20261015T183924Z-dev-s0-rescored-public itself 74.6%
 - jarvis-lab1108/20261108T175939Z-dev-s0 at none/20261015T223015Z-dev-s0's leak 0.0%: no budget in the curve leaks that little; none/20261015T223015Z-dev-s0 itself 0.0%
-- jarvis-lab1108/20261108T175939Z-dev-s0 at full_history/20261015T215945Z-dev-s0's leak 47.2%: recall 65.2% (budget full); full_history/20261015T215945Z-dev-s0 itself 42.8%
+- jarvis-lab1108/20261108T175939Z-dev-s0 at full_history/20261015T215945Z-dev-s0's leak 47.2%: found without leaking 65.2% (budget full); full_history/20261015T215945Z-dev-s0 itself 41.0%
 

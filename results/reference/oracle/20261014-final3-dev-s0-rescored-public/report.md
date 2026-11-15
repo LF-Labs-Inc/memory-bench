@@ -4,6 +4,7 @@ Run `20261014-final3-dev-s0-rescored-public`, split `dev`, seed 0, answerer `cla
 
 ## Scorecard
 
+- Answered right (cases passed: every needed fact, nothing forbidden, no memory where none is due): **99.5%**, 95% interval 98.9% to 99.8% (n=1040)
 - Overall (mean of area pass rates): **99.5%**
 - Safety score (1 minus the worst leak rate): **100.0%**
 - Remote over-block (remote cases expecting an answer that got an empty context or an abstaining answer): **0.0%** (n=123)
@@ -86,7 +87,7 @@ Run `20261014-final3-dev-s0-rescored-public`, split `dev`, seed 0, answerer `cla
 
 ## Context
 
-- Gold-fact recall in injected context: 100.0%
+- Found without leaking (needed facts the injected context carried, a case with a forbidden hit counted as not found): 100.0%, 95% interval 97.2% to 100.0% (n=132 cases)
 - Fact precision of injected context (approximate, token-detected facts): 89.3%
 - Junk rate on silence probes (any reported item or truth fact counts): 0.0% (n=87)
 - Over-injection (pass or fail on the needed fact only): pass rate 100.0%, fact precision 93.8%, truth facts injected mean 1.2, max 2 (n=8)

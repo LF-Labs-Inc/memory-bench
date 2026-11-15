@@ -23,16 +23,29 @@ and L1 seeding), per replayed world day. Days are the local midnights the replay
 summed over replay groups, like the cost); a run without replay stats is taken to span the world, 2026-03-01 to
 2026-08-31, 184 days, and says so. Null when the system reports no cost.
 
-Recall, beside its plain mean over the cases that have needed facts (context_recall cases): the number of those
-cases; the share found without leaking (a case's recall, or 0 when the case had a forbidden hit, so a context that
-carried the needed fact together with forbidden content no longer counts as found); a Wilson 95% interval for each,
-taking a case as one trial (approximate when a case's recall is a fraction); and the share of needed facts found by
-who stated them, the principal or the assistant versus anyone else (the truth row's stated_by), since systems take in
-other people's words differently.
+Recall, over the cases that have needed facts (context_recall cases): summary.json keeps the plain mean, the number
+of those cases, the share found without leaking (a case's recall, or 0 when the case had a forbidden hit, so a context
+that carried the needed fact together with forbidden content does not count as found), a Wilson 95% interval for
+each, taking a case as one trial (approximate when a case's recall is a fraction), and the share of needed facts found
+by who stated them, the principal or the assistant versus anyone else (the truth row's stated_by). report.md leads
+with answered right and prints recall only as found without leaking, never the plain mean or the split by speaker.
+
+    uv run python -m harness.report RUN_DIR [RUN_DIR ...]
+
+rewrites each run's report.md from its saved summary.json and, for a dev run, its cases.jsonl; nothing is rescored
+and no model is called. A summary saved before answered right was added gets it from its counts; one saved before the
+leak-adjusted fields gets them from its cases.jsonl, and a run with neither says so in its report. summary.json is not
+rewritten.
 """
+import argparse
+import copy
+import json
 import math
+import sys
+from pathlib import Path
 from collections import Counter, defaultdict
 
+from harness import data
 from harness.score import forgotten
 
 LEAK_CATEGORIES = ("forget", "scope", "secrets", "poisoning")
@@ -132,6 +145,19 @@ def _over_blocked(r):
     return not r["context"]["text"].strip() or (r["level"] == "L3" and r.get("verdict") == "abstained")
 
 
+def answered_right(passed, scored):
+    right = passed / scored if scored else None
+    return {"rate": right, "n": scored, "ci95": wilson(right, scored)}
+
+
+def found_without_leaking(records):
+    """recall_n and the leak-adjusted recall with its interval, over the scored records that have needed facts."""
+    recs = [r for r in records if not r.get("error") and r["recall"] is not None]
+    clean = _mean([0.0 if r["leak"] else r["recall"] for r in recs])
+    return {"recall_n": len(recs), "recall_without_leak_mean": clean,
+            "recall_without_leak_ci95": wilson(clean, len(recs))}
+
+
 def summarize(records, facts, config, llm_stats=None, system_cost=None, rejudge=None):
     ok = [r for r in records if not r.get("error")]
     by_area = _table(ok, "area")
@@ -149,10 +175,9 @@ def summarize(records, facts, config, llm_stats=None, system_cost=None, rejudge=
     over_inj = [r for r in ok if r["subarea"] == "over_injection"]
     counts = [len(r.get("injected_facts") or []) for r in over_inj]
     passed = sum(r["passed"] for r in ok)
-    right = passed / len(ok) if ok else None
     recall_recs = [r for r in ok if r["recall"] is not None]
     recall_mean = _mean([r["recall"] for r in recall_recs])
-    clean_recall = _mean([0.0 if r["leak"] else r["recall"] for r in recall_recs])
+    clean = found_without_leaking(ok)
 
     ctx = [r["context"] for r in ok]
     silence = [r for r in ok if r["expect"] == "no_injection"]
@@ -166,7 +191,7 @@ def summarize(records, facts, config, llm_stats=None, system_cost=None, rejudge=
         "config": config,
         "counts": {"cases": len(records), "scored": len(ok), "errors": len(records) - len(ok),
                    "passed": passed},
-        "headline": {"answered_right": {"rate": right, "n": len(ok), "ci95": wilson(right, len(ok))},
+        "headline": {"answered_right": answered_right(passed, len(ok)),
                      "overall": overall, "safety_score": safety, "remote_over_block": over_block,
                      "leak_rates": leaks,
                      "nonzero_leaks": {k: v["rate"] for k, v in leaks.items() if v["rate"]}},
@@ -179,8 +204,8 @@ def summarize(records, facts, config, llm_stats=None, system_cost=None, rejudge=
             "recall_mean": _mean([r["recall"] for r in ok]),
             "recall_n": len(recall_recs),
             "recall_ci95": wilson(recall_mean, len(recall_recs)),
-            "recall_without_leak_mean": clean_recall,
-            "recall_without_leak_ci95": wilson(clean_recall, len(recall_recs)),
+            "recall_without_leak_mean": clean["recall_without_leak_mean"],
+            "recall_without_leak_ci95": clean["recall_without_leak_ci95"],
             "recall_by_fact_origin": _recall_by_origin(recall_recs, facts),
             "fact_precision_mean": _mean([r.get("fact_precision") for r in ok]),
             "silence_junk_rate": _mean([float(bool(r["context"]["item_ids"] or r["detail"].get("extra_facts")))
@@ -230,10 +255,12 @@ def _ci(ci):
     return f", 95% interval {_f(ci[0], True)} to {_f(ci[1], True)}" if ci else ""
 
 
-def _origin_lines(by_origin):
-    labels = {"user_or_assistant": "the user or the assistant", "others": "other people"}
-    return [f"- Needed facts found, stated by {labels[k]}: {v['found']}/{v['facts']} ({_f(v['rate'], True)})"
-            f"{_ci(v['ci95'])}" for k, v in by_origin.items()]
+def _found_line(c):
+    if c.get("recall_without_leak_mean") is None and not c.get("recall_n"):
+        return "- Found without leaking: leak-adjusted recall was not recorded for this run"
+    return (f"- Found without leaking (needed facts the injected context carried, a case with a forbidden hit counted "
+            f"as not found): {_f(c['recall_without_leak_mean'], True)}{_ci(c.get('recall_without_leak_ci95'))} "
+            f"(n={c['recall_n']} cases)")
 
 
 def _md_table(title, table):
@@ -289,12 +316,7 @@ def render_markdown(s, records=None, facts=None):
     out += _md_table("By area", s["by_area"]) + _md_table("By level", s["by_level"])
     out += _md_table("By channel", s["by_channel"]) + _md_table("By difficulty", s["by_difficulty"])
     out += _md_table("By scoring type", s["by_scoring"])
-    out += ["## Context", "",
-            f"- Gold-fact recall in injected context: {_f(c['recall_mean'], True)}{_ci(c.get('recall_ci95'))}"
-            f" (n={c.get('recall_n', 'n/a')} cases)",
-            f"- Recall found without leaking (0 for a case with a forbidden hit): "
-            f"{_f(c.get('recall_without_leak_mean'), True)}{_ci(c.get('recall_without_leak_ci95'))}",
-            *_origin_lines(c.get("recall_by_fact_origin") or {}),
+    out += ["## Context", "", _found_line(c),
             f"- Fact precision of injected context (approximate, token-detected facts): "
             f"{_f(c['fact_precision_mean'], True)}",
             f"- Junk rate on silence probes (any reported item or truth fact counts): "
@@ -312,9 +334,11 @@ def render_markdown(s, records=None, facts=None):
         if v:
             out.append(f"- Sensitive truth facts sent ({label}, token-detected facts with a sensitivity tag): mean "
                        f"{_f(v['facts_mean'])} per case, at least one in {_f(v['share'], True)} (n={v['n']})")
-    out += ["", "### Injected tokens by area", "", "| area | n | mean | p90 |", "|---|---:|---:|---:|"]
-    out += [f"| {a} | {v['n']} | {_f(v['mean'])} | {_f(v['p90'])} |" for a, v in (c.get("tokens_by_area") or {}).items()]
     out.append("")
+    if c.get("tokens_by_area"):  # a summary saved before 2026-11-07 has none
+        out += ["### Injected tokens by area", "", "| area | n | mean | p90 |", "|---|---:|---:|---:|"]
+        out += [f"| {a} | {v['n']} | {_f(v['mean'])} | {_f(v['p90'])} |" for a, v in c["tokens_by_area"].items()]
+        out.append("")
     a = s["answers"]
     out += ["## Answers (L3)", "", f"- Verdicts: {a['verdicts']}",
             f"- Judge agreement on a re-judged sample: {_f(s['judge_agreement']['agreement'], True)} "
@@ -323,7 +347,7 @@ def render_markdown(s, records=None, facts=None):
         out.append(f"- System's own answers: pass rate {_f(a['own_answer_pass_rate'], True)} (n={a['own_answer_n']})")
     out += ["", "## Cost", "", f"- System under test, total: {s['cost']['system_total'] or 'not reported'}",
             f"- System under test, during probes by area: {s['cost']['system_probe_by_area'] or 'not reported'}",
-            _upkeep_line(s["cost"].get("upkeep")),
+            *([_upkeep_line(s["cost"]["upkeep"])] if "upkeep" in s["cost"] else []),
             f"- Harness models (answerer and judge): {s['cost']['harness_models']}", ""]
     if records is not None:
         out += ["## The 20 most informative failures", ""]
@@ -353,3 +377,45 @@ def render_markdown(s, records=None, facts=None):
     else:
         out += ["Per-case results are withheld for the test split.", ""]
     return "\n".join(out)
+
+
+def from_saved(summary, records=None):
+    """A copy of a saved summary.json with what the current report needs and an older run did not save: answered
+    right from its counts, and the leak-adjusted recall from its records (a dev run's cases.jsonl) when there are any."""
+    s = copy.deepcopy(summary)
+    n = s["counts"]
+    s["headline"].setdefault("answered_right", answered_right(n["passed"], n["scored"]))
+    if "recall_without_leak_mean" not in s["context"] and records is not None:
+        s["context"].update(found_without_leaking(records))
+    return s
+
+
+def rebuild(run_dir, facts):
+    """Rewrite run_dir/report.md from its saved summary.json and cases.jsonl (dev runs); no model is called."""
+    d = Path(run_dir)
+    summary = json.loads((d / "summary.json").read_text())
+    cases = d / "cases.jsonl"
+    records = [json.loads(line) for line in cases.read_text().splitlines() if line.strip()] if cases.exists() else None
+    (d / "report.md").write_text(render_markdown(from_saved(summary, records), records,
+                                                 facts if records is not None else None))
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(prog="python -m harness.report",
+                                description="Rewrite report.md from a saved run's summary.json and cases.jsonl.")
+    p.add_argument("run_dirs", nargs="+", help="run directories holding summary.json")
+    p.add_argument("--data-root", default=str(data.REPO), help=argparse.SUPPRESS)
+    args = p.parse_args(sys.argv[1:] if argv is None else argv)
+    missing = [d for d in args.run_dirs if not (Path(d) / "summary.json").exists()]
+    if missing:
+        print(f"no summary.json in: {', '.join(missing)}", file=sys.stderr)
+        return 2
+    facts = data.load(args.data_root).facts
+    for d in args.run_dirs:
+        rebuild(d, facts)
+        print(f"wrote {Path(d) / 'report.md'}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

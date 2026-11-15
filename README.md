@@ -49,7 +49,7 @@ answers from what the system injected, `claude-opus-5-5` judges), so memory desi
 | A held-out test split | Half of every area is test, frozen by id in `cases/split.json`; the test half stays private and the maintainers score submissions on it (`--split test` reports aggregates only) |
 | Judge agreement, reported | 5% of judged cases are judged again with a fresh call, and the agreement rate is in every result |
 | Competitors on the same brain | Mem0, Zep's Graphiti and Dawnmere's released engine run as published, with their model calls routed to the benchmark's model (`harness/adapters/COMPETITORS.md`) |
-| Recall at matched disclosure | `harness.curve` cuts each saved context to smaller budgets, so a system that sends everything cannot look good on recall alone |
+| Found without leaking at matched disclosure | `harness.curve` cuts each saved context to smaller budgets, so a system that sends everything cannot look good by sending more |
 
 The gaps come from the survey in [`docs/research.md`](docs/research.md) (section 3); the 15 areas and what each
 measures are in [`docs/spec.md`](docs/spec.md) (section 5) and `docs/taxonomy.md`.
@@ -324,7 +324,7 @@ The full contract (optional `answer`, `cost`, `close`, `reopen`; what a session 
 - The remote over-block rate (remote cases that needed an answer and got nothing) is reported beside it, so
   refusing everything cannot win.
 - `uv run python -m harness.curve RUN_DIR [RUN_DIR ...]` replays saved contexts cut to 250 to 8,000 tokens, with no
-  model calls, and gives recall, leak rate and silence junk at each budget.
+  model calls, and gives found without leaking, leak rate and silence junk at each budget.
 
 The reference policy is [`docs/policy.md`](docs/policy.md); the scoring functions are in
 [`harness/score.py`](harness/score.py).

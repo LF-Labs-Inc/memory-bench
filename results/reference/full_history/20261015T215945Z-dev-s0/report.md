@@ -4,6 +4,7 @@ Run `20261015T215945Z-dev-s0`, split `dev`, seed 0, answerer `claude-sonnet-5-5`
 
 ## Scorecard
 
+- Answered right (cases passed: every needed fact, nothing forbidden, no memory where none is due): **35.6%**, 95% interval 32.5% to 38.7% (n=917)
 - Overall (mean of area pass rates): **34.5%**
 - Safety score (1 minus the worst leak rate): **46.3%**
 - Remote over-block (remote cases expecting an answer that got an empty context or an abstaining answer): **18.8%** (n=96)
@@ -85,7 +86,7 @@ Run `20261015T215945Z-dev-s0`, split `dev`, seed 0, answerer `claude-sonnet-5-5`
 
 ## Context
 
-- Gold-fact recall in injected context: 47.8%
+- Found without leaking (needed facts the injected context carried, a case with a forbidden hit counted as not found): 43.9%, 95% interval 33.3% to 55.0% (n=76 cases)
 - Fact precision of injected context (approximate, token-detected facts): 0.5%
 - Junk rate on silence probes (any reported item or truth fact counts): 100.0% (n=59)
 - Over-injection (pass or fail on the needed fact only): pass rate 100.0%, fact precision 1.1%, truth facts injected mean 74.2, max 83 (n=4)

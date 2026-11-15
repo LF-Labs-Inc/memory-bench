@@ -1,4 +1,6 @@
 """harness/report.py: tokens by area, sensitive facts sent, and the system's upkeep per replayed day."""
+import json
+
 from harness import report
 
 FACTS = {"f1": {"sensitivity": ["health"], "notes": ""}, "f2": {"sensitivity": [], "notes": ""},
@@ -74,7 +76,8 @@ def test_recall_without_leak_zeroes_a_case_that_leaked_and_keeps_recall_mean():
     assert c["recall_n"] == 3
     assert c["recall_mean"] == 2.5 / 3
     assert c["recall_without_leak_mean"] == 1.5 / 3
-    assert "found without leaking" in report.render_markdown(s)
+    assert "Found without leaking (needed facts the injected context carried, a case with a forbidden hit counted as " \
+           "not found): 50.0%" in report.render_markdown(s)
 
 
 def test_wilson_interval_matches_known_values():
@@ -98,7 +101,7 @@ def test_recall_by_fact_origin_splits_needed_facts_by_who_stated_them():
     assert by["user_or_assistant"]["rate"] == 0.75 and by["others"]["rate"] == 0.5
     assert by["others"]["ci95"] == report.wilson(0.5, 2)
     md = report.render_markdown(s)
-    assert "stated by the user or the assistant: 3/4" in md and "stated by other people: 1/2" in md
+    assert "stated by" not in md  # summary.json keeps the split; the report prints no raw recall
 
 
 def test_answered_right_is_the_share_of_cases_passed_and_leads_the_report():
@@ -112,3 +115,37 @@ def test_answered_right_is_the_share_of_cases_passed_and_leads_the_report():
     md = report.render_markdown(s)
     assert md.index("Answered right") < md.index("Overall (mean of area pass rates)")
     assert "answered right 66.7%" in report.headline_text(s)
+
+
+RAW_RECALL_LABELS = ("Gold-fact recall", "Needed facts found", "context recall", "token-matched recall",
+                     "Recall found without leaking", "recall_mean")
+
+
+def test_a_report_prints_no_raw_recall_label():
+    recs = [recall_rec("a", 1.0, ["u1"]), recall_rec("b", 1.0, ["u2"], leak=True),
+            recall_rec("c", 0.5, ["u1", "o1"], missing=["o1"]), rec("d")]
+    s = report.summarize(recs, ORIGIN, {"adapter": "x"})
+    for md in (report.render_markdown(s), report.render_markdown(s, recs, ORIGIN), report.headline_text(s)):
+        assert not [label for label in RAW_RECALL_LABELS if label.lower() in md.lower()]
+        assert "83.3%" not in md  # the plain recall mean, 2.5/3
+
+
+def test_rebuild_from_a_summary_saved_before_answered_right_and_leak_adjusted_recall(tmp_path):
+    recs = [recall_rec("a", 1.0, ["u1"]), recall_rec("b", 1.0, ["u2"], leak=True), rec("c")]
+    recs[2]["recall"] = None
+    s = report.summarize(recs, ORIGIN, {"adapter": "x"})
+    del s["headline"]["answered_right"]
+    for k in ("recall_n", "recall_ci95", "recall_without_leak_mean", "recall_without_leak_ci95"):
+        del s["context"][k]
+    dev, test = tmp_path / "dev", tmp_path / "test"
+    for d in (dev, test):
+        d.mkdir()
+        (d / "summary.json").write_text(json.dumps(s))
+    (dev / "cases.jsonl").write_text("".join(json.dumps(r) + "\n" for r in recs))
+    report.rebuild(dev, ORIGIN)
+    report.rebuild(test, ORIGIN)
+    md = (dev / "report.md").read_text()
+    assert "Answered right" in md and "**100.0%**" in md and "(n=3)" in md
+    assert "Found without leaking" in md and ": 50.0%" in md and "(n=2 cases)" in md
+    assert "leak-adjusted recall was not recorded for this run" in (test / "report.md").read_text()
+    assert json.loads((dev / "summary.json").read_text()) == s  # the saved summary is not rewritten

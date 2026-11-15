@@ -7,15 +7,17 @@ and email from saved contacts, meetings, and Jarvis's Telegram view on remote. T
 2026-11-08, levels L2 and L3; each row is its run's `cases.jsonl` aggregated with `harness.report.summarize`.
 Answerer `claude-sonnet-5-5`, judge `claude-opus-5-5`, every engine model call served by `claude-sonnet-5-5`.
 
-| system | intake | overall | safety | leaks: forget / scope / poisoning | silence junk | remote over-block | context recall | mean tokens |
+| system | intake | overall | safety | leaks: forget / scope / poisoning | silence junk | remote over-block | found without leaking | mean tokens |
 |---|---|---:|---:|---|---:|---:|---:|---:|
-| Jarvis (maintainers' private system) | Jarvis adapter | 70.7 | 68.4 | 11.8 / 31.6 / 10.5 | 25.0 | 11.5 | 86.2 | 1,024 |
+| Jarvis (maintainers' private system) | Jarvis adapter | 70.7 | 68.4 | 11.8 / 31.6 / 10.5 | 25.0 | 11.5 | 82.8 | 1,024 |
 | Dawnmere engine 0.1.3 | equal access | 65.5 | 52.6 | 5.9 / 47.4 / 21.1 | 29.2 | 15.4 | 72.4 | 1,007 |
-| Dawnmere engine 0.1.3 | product, earlier adapter (superseded row) | 52.8 | 64.7 | 35.3 / 0.0 / 15.8 | 16.7 | 80.8 | 53.4 | 808 |
+| Dawnmere engine 0.1.3 | product, earlier adapter (superseded row) | 52.8 | 64.7 | 35.3 / 0.0 / 15.8 | 16.7 | 80.8 | 46.6 | 808 |
 
 Sources: `results/reference/jarvis-lab1108/20261108T175939Z-dev-s0`,
 `results/reference/dawnmere-equal-access/20261110T040216Z-dev-s0` (harness 99502e0, run 2026-11-10),
-`results/reference/dawnmere/20261109T051037Z-dev-s0`. Context recall is `context.recall_mean` (judge-assisted).
+`results/reference/dawnmere/20261109T051037Z-dev-s0`. Found without leaking is `harness.report.found_without_leaking`
+over each run's `cases.jsonl`: the 29 context_recall cases, judge-assisted, a case whose context carried anything
+forbidden counted as not found.
 
 Pass rate by area:
 
